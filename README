@@ -1,0 +1,24 @@
+Tibula	Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+
+
+Tibula is a database web application framework based on eja micro web server.
+
+It can be used as a standalone application or as an eja library, to compile
+run "make mysql" or "make sqlite3" depending on which database you prefer. 
+This will download, compile and install eja, luasql and tibula itself in
+/opt/eja.it .
+
+There is also a demo tibula.sql that can be easily imported into mysql or
+sqlite3, for instance as:
+
+ sqlite3 /opt/eja.it/var/tibula.db3 < tibula.sql
+
+it can then be started with the following command:
+ 
+ eja --tibula-start --sql-type sqlite3 --sql-database /opt/eja.it/var/tibula.db3 --log-level 3
+
+and accessed via browser at http://localhost:35248/eja.tibula as admin/eja.it .
+
+
+Further information and documentation can be found at http://tibula.net 
+
