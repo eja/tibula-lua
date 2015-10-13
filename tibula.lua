@@ -4,7 +4,7 @@
 
 
 tibula={}
-tibulaCDN="http://media.tibula.org/"
+tibulaCDN="http://cdn.tibula.net/"
 
 eja.mime["tibula"]="application/tibula"
 eja.mimeApp['application/tibula']='tibulaWeb'
@@ -16,11 +16,11 @@ eja.help.tibulaStop='stop tibula'
 
 
 function tibulaStart() 
- sqlType=eja.opt.sqlType or "mysql"
- sqlUsername=eja.opt.sqlUsername or "root"
- sqlPassword=eja.opt.sqlPassword or "eja.it"
- sqlHostname=eja.opt.sqlHostname or "localhost"
- sqlDatabase=eja.opt.sqlDatabase or "tibula"
+ sqlType=eja.opt.sqlType or "sqlite3"
+ sqlUsername=eja.opt.sqlUsername
+ sqlPassword=eja.opt.sqlPassword
+ sqlHostname=eja.opt.sqlHostname
+ sqlDatabase=eja.opt.sqlDatabase
  if tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) then
   tibulaTableStart();
   ejaWeb();
@@ -39,6 +39,8 @@ function tibulaWeb(web)
 
  if ejaSqlConnection and not ejaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
   tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) 
+ else
+  
  end
  
  for k,v in next,web.opt do
