@@ -61,7 +61,7 @@ end
 
 
 function ejaSqlQuery(query,...)	--filter sql query 
- query=sf(query,...); 
+ query=ejaSqlConnection:escape(sf(query,...)); 
  ejaTrace('[sql] %s',query) 
  return query;
 end

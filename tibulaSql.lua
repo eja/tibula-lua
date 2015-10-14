@@ -4,10 +4,15 @@
 
 
 function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) 
+
+ sqlType=sqlType or "sqlite3"
+ sqlDatabase=sqlDatabase or eja.pathVar..'/tibula.db3'
+ 
  if ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) then
   if sqlType=="mysql" then
    ejaSqlRun("CREATE TEMPORARY TABLE `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");   
   elseif sqlType=="sqlite3" then
+   ejaSqlRun("CREATE TEMPORARY TABLE `ejaSessions` (`ejaId` integer NOT NULL primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` mediumtext, `sub` varchar(255) default NULL);")
   end
   return true
  else 
@@ -18,6 +23,7 @@ end
 
 function ejaSqlQuery(query,...)	--filter sql query 
  query=sf(query,...); 
+ query=ejaSqlConnection:escape(sf(query,...));
  
  if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
   query=string.gsub(query,"@ejaOwner",tibula['ejaOwner']);
@@ -346,7 +352,4 @@ function tibulaSelectToArray(value)      --convert a "|" separated list of "\n" 
  
  return a;                      
 end
-
-
-
 

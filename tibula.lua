@@ -16,12 +16,7 @@ eja.help.tibulaStop='stop tibula'
 
 
 function tibulaStart() 
- sqlType=eja.opt.sqlType or "sqlite3"
- sqlUsername=eja.opt.sqlUsername
- sqlPassword=eja.opt.sqlPassword
- sqlHostname=eja.opt.sqlHostname
- sqlDatabase=eja.opt.sqlDatabase
- if tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) then
+ if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
   tibulaTableStart();
   ejaWeb();
  end
@@ -37,8 +32,8 @@ function tibulaWeb(web)
  local opt={}
  tibulaTableStart()
 
- if ejaSqlConnection and not ejaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
-  tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) 
+ if not ejaSqlConnection or not ejaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
+  tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
  else
   
  end
