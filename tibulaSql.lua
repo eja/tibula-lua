@@ -23,12 +23,13 @@ end
 
 function ejaSqlQuery(query,...)	--filter sql query 
  query=sf(query,...); 
- query=ejaSqlConnection:escape(sf(query,...));
  
  if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
   query=string.gsub(query,"@ejaOwner",tibula['ejaOwner']);
  end
- 
+
+ ejaTrace('[sql] %s',query)
+
  return query;
 end
 

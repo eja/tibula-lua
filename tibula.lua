@@ -34,8 +34,6 @@ function tibulaWeb(web)
 
  if not ejaSqlConnection or not ejaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
   tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
- else
-  
  end
  
  for k,v in next,web.opt do
