@@ -19,6 +19,10 @@ $(ejaPath):
 	
 $(ejaPath)/bin/eja:
 	@  cd eja && make install
+	
+
+$(ejaPath)/bkp:
+	@  mkdir -p $(ejaPath)/bkp
 
 
 mysql: eja
@@ -39,9 +43,9 @@ tibula: eja
 	@  cat *.lua > $(ejaPath)/lib/tibula.lua
 	@  eja/eja --export $(ejaPath)/lib/tibula.lua
 	@- rm $(ejaPath)/lib/tibula.lua	
+	
 
-
-backup:
+backup: $(ejaPath)/bkp
 	tar zcR ../tibula > $(ejaPath)/bkp/ejaTibula-$(ejaVersion).tar.gz
 
 
@@ -61,7 +65,7 @@ clean-eja:
 clean-all: clean clean-sql clean-eja
 
 
-update: clean-all
+update: clean-all backup
 	@  git add .
 	@- git commit
 	@  git push -u origin master
