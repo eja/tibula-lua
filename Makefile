@@ -61,7 +61,7 @@ clean-eja:
 clean-all: clean clean-sql clean-eja
 
 
-update: clean-all backup
+update: clean-all
 	@  git add .
 	@- git commit
 	@  git push -u origin master
