@@ -17,6 +17,8 @@ end
 
 function tibulaTableImport(a)	--import data into eja table
  for key,value in pairs(a) do
+  key=ejaUrlDecode(key)
+  value=ejaUrlDecode(value)
   if ejaCheck(key,"ejaId")  then tibula['ejaId']=value;  end
   if ejaCheck(key,"ejaOut") then tibula['ejaOut']=value; end --XHTML/XML/JSON
   if ejaCheck(key,"ejaXml") then tibula['ejaOut']=value; end --deprecated
@@ -36,16 +38,10 @@ function tibulaTableImport(a)	--import data into eja table
   
   if string.sub(key,1,10) == "ejaAction[" then tibula['ejaAction']=string.sub(string.match(key,"%[%w+%]"),2,-2); end
 
-  if ejaCheck(key,"ejaId[]") then	--? not yet supported by eja
-   if type(value) == "table" then
-    tibula['ejaIdArray']={};  
-    for k,v in pairs(value) do
-     if not ejaCheck(tibula['ejaId']) then tibula['ejaId']=v; end
-     if ejaCheck(v) then table.insert(tibula['ejaIdArray'],v); end
-    end
-   else
-    tibula['ejaId']=value;
-   end
+  if string.sub(key,1,6) == "ejaId[" then
+   if not tibula['ejaIdArray'] then tibula['ejaIdArray']={}; end
+   if n(tibula['ejaId']) < 1 then tibula['ejaId']=value; end
+   table.insert(tibula['ejaIdArray'],value)
   end 
 
   if ejaCheck(key,"ejaFile") and type(value) == "table" then

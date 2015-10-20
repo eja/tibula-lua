@@ -50,7 +50,7 @@ end
 function tibulaXhtmlFooter()	--return xhtml closed tags 
  local r=""
  
- if ejaCheck(tibula['ejaId']) then r=r..sf('<input type="hidden" name="ejaId[]" value="%d"/>',tibula['ejaId']); end
+ if ejaCheck(tibula['ejaId']) then r=r..sf('<input type="hidden" name="ejaId" value="%d"/>',tibula['ejaId']); end
  if ejaCheck(tibula['ejaModuleId']) then r=r..sf('<input type="hidden" name="ejaModuleId" value="%d"/>',tibula['ejaModuleId']); end
  if ejaCheck(tibula['ejaSession']) then r=r..sf('<input type="hidden" name="ejaSession" value="%s"/>',tibula['ejaSession']); end
  r=r..sf('</form></div></body></html>');
@@ -275,7 +275,7 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
    if ejaCheck(row[v]) then value=row[v] else value="" end
    if ejaCheck(v,"ejaId") and t > 0 then 
     ejaIdRow=value;
-    r=r..sf('<td><input type="checkbox" name="ejaId[]" value="%d" /></td>',value); 
+    r=r..sf('<td><input type="checkbox" name="ejaId[%d]" value="%d" /></td>',value,value); 
     if t == 2 then
      local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      if not ejaCheck(sql) then 

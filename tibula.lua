@@ -29,18 +29,13 @@ end
 
 
 function tibulaWeb(web) 
- local opt={}
  tibulaTableStart()
 
  if not ejaSqlConnection or not ejaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
   tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
  end
  
- for k,v in next,web.opt do
-  opt[ejaUrlDecode(k)]=ejaUrlDecode(v)
- end
-
- tibulaTableImport(opt);
+ tibulaTableImport(web.opt);
  tibulaTableRun()
  web.data=tibulaTableExport()
 
