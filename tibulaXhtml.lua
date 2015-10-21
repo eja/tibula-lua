@@ -36,6 +36,7 @@ function tibulaXhtmlHeader() 	--return xhtml header and open form
  r=r..sf('<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="%s" lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
  r=r..sf('<head>');
  r=r..sf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
+ r=r..sf('<meta name="Copyright" content="ubaldo@eja.it">')
  r=r..sf('<meta http-equiv="Pragma" content="no-cache"/>');
  r=r..sf('<meta http-equiv="Expires" content="-1"/>');
  r=r..sf('<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>');
@@ -174,7 +175,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
    r=r..sf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s"/></label>',tibulaTranslate("ejaIntegerTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);  
    r=r..sf('</fieldset>');
   else
-   if not ejaCheck(tibula['ejaValues'][fieldName]) then value=""; else value=tibula['ejaValues'][fieldName]; end 
+   if not tibula['ejaValues'][fieldName] then fieldValue=""; else fieldValue=tibula['ejaValues'][fieldName]; end 
    r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
   end
  end
@@ -272,8 +273,8 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
   x=0;
   for k,v in pairs(getmetatable(sqlArray)) do
    x=x+1;
-   if ejaCheck(row[v]) then value=row[v] else value="" end
-   if ejaCheck(v,"ejaId") and t > 0 then 
+   if row[v] then value=row[v] else value="" end
+   if s(v) == "ejaId" and t > 0 then 
     ejaIdRow=value;
     r=r..sf('<td><input type="checkbox" name="ejaId[%d]" value="%d" /></td>',value,value); 
     if t == 2 then
