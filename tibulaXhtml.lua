@@ -32,15 +32,14 @@ end
 function tibulaXhtmlHeader() 	--return xhtml header and open form
  local r="";
  
- r=sf('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
- r=r..sf('<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="%s" lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
+ r=sf('<!DOCTYPE html>');
+ r=r..sf('<html lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
  r=r..sf('<head>');
+ r=r..sf('<meta charset="utf-8">')
+ r=r..sf('<meta name="author" content="ubaldo@eja.it">')
+ r=r..sf('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+ r=r..sf('<script type="text/javascript" src="http://cdn.tibula.net/tibula.js"></script>');
  r=r..sf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
- r=r..sf('<meta name="Copyright" content="ubaldo@eja.it">')
- r=r..sf('<meta http-equiv="Pragma" content="no-cache"/>');
- r=r..sf('<meta http-equiv="Expires" content="-1"/>');
- r=r..sf('<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>');
- r=r..sf('<script type="text/javascript" src="%s/tibula.js"></script>',tibulaCDN);
  r=r..sf('</head>');
  r=r..sf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula['ejaLanguage']);
 
