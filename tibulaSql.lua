@@ -186,7 +186,7 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
   local rowType=t;
   local rowValue=""
   local rowArray={}
-  if ejaCheck(tibula['ejaValues'][rowName]) then rowValue=tibula['ejaValues'][rowName]; end
+  if tibula['ejaValues'][rowName] then rowValue=tibula['ejaValues'][rowName]; end
   if ejaCheck(v['type'],"select") then rowArray=tibulaSelectToArray(v['value']); end
   if ejaCheck(v['type'],"sqlMatrix") then rowArray=tibulaSelectSqlToArray(v['value']); end
   if ejaCheck(v['type'],"sqlValue") or ejaCheck(v['type'],"sqlHidden") then rowValue=ejaSqlRun(v['value']); end
