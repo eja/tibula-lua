@@ -36,7 +36,7 @@ end
 
 function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for active module and ownerId
  local moduleId;
- if ejaCheck(tibula['ejaModuleId']) then moduleId=tibula['ejaModuleId']; else moduleId=tibula['ejaModuleLink']; end
+ if n(tibula['ejaModuleLink']) > 0 and n(tibula['ejaModuleChange']) > 0 then moduleId=tibula['ejaModuleChange']; else moduleId=tibula['ejaModuleId']; end
 
  local groupOwners=ejaSqlIncludeList("SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaModules') AND srcFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') )) AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers');",ownerId,moduleId);
 

@@ -150,10 +150,9 @@ function ejaSqlTableCreate(tableName)	--create a new table if it does not exist
 end
 
 
-function ejaSqlTableColumnCreate(tableNameId, columnName, columnType) 	--add a new column field into a table if it does not exist
+function ejaSqlTableColumnCreate(tableName, columnName, columnType) 	--add a new column field into a table if it does not exist
  local r=0;   
  local dataType=ejaSqlTableDataType(columnType);
- local tableName=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tableNameId);
 
  if s(dataType) ~= "" and not ejaSqlRun('SELECT %s FROM %s LIMIT 1',columnName,tableName) then
   if ejaSqlRun('ALTER TABLE %s ADD %s %s;',tableName,columnName,dataType) then

@@ -192,7 +192,7 @@ function tibulaTableRun()	--main tibula engine
   end   
 
   --Fill or update ejaModuleName
-  if ejaCheck(tibula['ejaModuleId']) then tibula['ejaModuleName']=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId']); end
+  if n(tibula['ejaModuleId']) > 0 then tibula['ejaModuleName']=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId']) or 'eja'; end
    
   --Fill ejaCommands
   tibula['ejaCommands']={}
@@ -321,7 +321,7 @@ function tibulaTableRun()	--main tibula engine
     
     --create table column
     if ejaCheck(tibula['ejaModuleName'],"ejaFields") and ejaCheck(tibula['ejaValues']['name']) and ejaCheck(tibula['ejaValues']['type']) and ejaCheck(tibula['ejaValues']['ejaModuleId']) then
-     local fieldCreate=ejaSqlTableColumnCreate(tibula['ejaValues']['ejaModuleId'], tibula['ejaValues']['name'], tibula['ejaValues']['type'])
+     local fieldCreate=ejaSqlTableColumnCreate(tibula['ejaValues']['ejaModuleName'], tibula['ejaValues']['name'], tibula['ejaValues']['type'])
      if n(fieldCreate) > 0 then tibulaInfo("ejaSqlFieldCreated"); end
      if n(fieldCreate) < 0 then tibulaInfo("ejaSqlFieldNotCreated"); end
     end
