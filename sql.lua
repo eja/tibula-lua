@@ -44,7 +44,7 @@ function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--
  end
 
  if ejaSqlConnection then 
-  ejaInfo('[sql] %s connection open',sqlType) 
+  ejaDebug('[sql] %s connection open',sqlType) 
  else
   ejaError('[sql] %s connection error',sqlType)
  end
@@ -54,7 +54,7 @@ end
 
 
 function ejaSqlStop()	--stop sql connection
- ejaInfo('[sql] %s connection closed',sqlType)
+ ejaDebug('[sql] %s connection closed',sqlType)
  if ejaSqlType=="mysql" then return ejaSqlConnection:close(); end
  if ejaSqlType=="sqlite3" then return ejaSqlConnection:close(); end
 end
