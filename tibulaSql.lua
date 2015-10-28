@@ -10,7 +10,7 @@ function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)
  
  if ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) then
   if sqlType=="mysql" then
-   ejaSqlRun("CREATE TEMPORARY TABLE `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");   
+   ejaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");   
   elseif sqlType=="sqlite3" then
    ejaSqlRun("CREATE TEMPORARY TABLE `ejaSessions` (`ejaId` integer NOT NULL primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` mediumtext, `sub` varchar(255) default NULL);")
   end
