@@ -185,7 +185,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
   if ejaCheck(fieldType,"htmlArea") then 
    class='class="jsEditor"';
    fieldValue=tibulaXhtmlFilter(fieldValue); 
-   title=sf('<a href="#" onClick="ejaXhtmlEditor(\'ejaValues[%s]\');">%s</a>',fieldName,tibulaTranslate(fieldName));
+   title=sf('%s',tibulaTranslate(fieldName));
   end
   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><textarea %s name="ejaValues[%s]">%s</textarea></fieldset>',tibulaUCFirst(fieldType),title,class,fieldName,fieldValue);
  end
@@ -195,11 +195,11 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
    if not ejaCheck(tibula['ejaValues'][fieldName..".begin"]) then tibula['ejaValues'][fieldName..".begin"]="" end
    if not ejaCheck(tibula['ejaValues'][fieldName..".end"]) then tibula['ejaValues'][fieldName..".end"]="" end
    r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s" onClick="ejaDateTime(this,\'%s\');"/></label>',tibulaTranslate("ejaDateFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"],fieldType);  
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s" onClick="ejaDateTime(this,\'%s\');"/></label>',tibulaTranslate("ejaDateTo"),fieldName,tibula['ejaValues'][fieldName..".end"],fieldType);
+   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s" /></label>',tibulaTranslate("ejaDateFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"]);  
+   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s" /></label>',tibulaTranslate("ejaDateTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);
    r=r..sf('</fieldset>');
   else
-   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="text" name="ejaValues[%s]" value="%s" onClick="ejaDateTime(this,\'%s\');"/></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldName,fieldValue,fieldType);
+   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="text" name="ejaValues[%s]" value="%s" /></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldName,fieldValue);
   end
  end
 
