@@ -293,11 +293,11 @@ function tibulaTableRun()	--main tibula engine
       if ejaCheck(tibula['ejaValues']['sqlCreated']) then
        tibulaInfo("ejaModuleSqlPermissionsCreated");
        ejaSqlRun("INSERT INTO ejaPermissions SELECT NULL,%d,'%s',%d,ejaId FROM ejaCommands WHERE defaultCommand>0",tibula['ejaOwner'],ejaSqlNow(),tibula['ejaId']);
-       ejaSqlRun("INSERT INTO ejaLinks (ejaId,ejaOwner,ejaLog,srcModuleId,srcFieldId,dstModuleId,dstFieldId,power) SELECT NULL,1,'%s',(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions'),ejaId,(SELECT ejaId FROM ejaModules WHERE name='ejaUsers'),%d,0 from ejaPermissions where ejaModuleId=%d;",ejaSqlNow(),tibula['ejaOwner'],tibula['ejaId']);
+       ejaSqlRun("INSERT INTO ejaLinks (ejaId,ejaOwner,ejaLog,srcModuleId,srcFieldId,dstModuleId,dstFieldId,power) SELECT NULL,1,'%s',(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions'),ejaId,(SELECT ejaId FROM ejaModules WHERE name='ejaUsers'),%d,2 from ejaPermissions where ejaModuleId=%d;",ejaSqlNow(),tibula['ejaOwner'],tibula['ejaId']);
       else
        tibulaInfo("ejaModuleContainerPermissionsCreated");
        ejaSqlRun("INSERT INTO ejaPermissions SELECT NULL,%d,'%s',%d,ejaId FROM ejaCommands WHERE name='logout'",tibula['ejaOwner'],ejaSqlNow(),tibula['ejaId']);
-       ejaSqlRun("INSERT INTO ejaLinks (ejaId,ejaOwner,ejaLog,srcModuleId,srcFieldId,dstModuleId,dstFieldId,power) SELECT NULL,1,'%s',(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions'),ejaId,(SELECT ejaId FROM ejaModules WHERE name='ejaUsers'),%d,0 from ejaPermissions where ejaModuleId=%d;",ejaSqlNow(),tibula['ejaOwner'],tibula['ejaId']);
+       ejaSqlRun("INSERT INTO ejaLinks (ejaId,ejaOwner,ejaLog,srcModuleId,srcFieldId,dstModuleId,dstFieldId,power) SELECT NULL,1,'%s',(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions'),ejaId,(SELECT ejaId FROM ejaModules WHERE name='ejaUsers'),%d,2 from ejaPermissions where ejaModuleId=%d;",ejaSqlNow(),tibula['ejaOwner'],tibula['ejaId']);
       end
      end
     end
