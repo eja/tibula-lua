@@ -12,7 +12,17 @@ function tibulaReset()    --reset global variables
 end
 
 
-function tibulaModuleLua()	--load lua script from ejaModule 
+function tibulaModuleLua(step)	--load lua script from ejaModule 
+ tibulaModuleLuaStep=step
+ local script=ejaSqlRun('SELECT lua FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId'])
+ if s(script) ~= '' then
+   local func,err=loadstring(script,tibula['ejaModuleName'])
+   if func then 
+    func()
+   else
+    ejaError('[tibula] %s',err)
+   end
+ end
 end
 
 

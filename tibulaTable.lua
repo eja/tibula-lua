@@ -199,7 +199,7 @@ function tibulaTableRun()	--main tibula engine
   for k,v in pairs ( tibulaSqlCommandArray(tibula['ejaOwner'],tibula['ejaModuleId'],"") ) do tibula['ejaCommands'][v]=k; end
 
   --run lua script for this ejaModuleId and save tibula into ejaSessions
-  tibulaModuleLua();
+  tibulaModuleLua(0);
   tibulaSessionWrite(tibula['ejaOwner'],tibula);
 
   --Actions engine, runs only if ejaAction is in ejaSqlCommandList
@@ -459,7 +459,7 @@ function tibulaTableRun()	--main tibula engine
  end
   
  -- lua module script last call.
- tibulaModuleLua();
+ tibulaModuleLua(1);
 end
 
 
@@ -475,7 +475,6 @@ function tibulaTableExport()
 end 
 
 function tibulaTableStop()
- tibulaModuleLuaRun = nil
  if not ejaCheck(tibula['ejaOut'],"XHTML") then
   tibulaSessionWrite(tibula['ejaOwner'],{});
  else
