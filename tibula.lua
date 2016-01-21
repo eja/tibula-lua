@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Suite española, Op. 47 
 
@@ -13,7 +13,7 @@ eja.lib.tibulaStart='tibulaStart'
 
 eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
-
+eja.opt.webSize=65536
 
 function tibulaStart() 
  if n(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
