@@ -1131,5 +1131,23 @@ INSERT INTO ejaTranslations VALUES(853,1,'2008-05-08 12:53:31','en',19,'ejaFiles
 INSERT INTO ejaTranslations VALUES(854,1,'2008-05-08 12:53:57','en',19,'ejaFilesUnzipAlert',' ');
 INSERT INTO ejaTranslations VALUES(855,1,'2010-01-28 09:46:07','en',0,'ejaDateFrom','from');
 INSERT INTO ejaTranslations VALUES(856,1,'2010-01-28 09:46:07','en',0,'ejaDateTo','to');
-
 COMMIT;
+
+/* change password update */
+INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:03',2,'passwordOld','password','',10,0,0,0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:30',2,'passwordNew','password','',20,0,0,0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:46',2,'passwordNewRepeat','password','',30,0,0,0,'',0);
+INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,70,15,13,1);
+INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,71,15,13,1);
+UPDATE ejaModules SET lua='if ejaNumber(tibulaModuleLuaStep)==0 and ejaNumber(tibula.ejaOwner) > 0 and ejaString(tibula.ejaAction)=="run" then
+  if ejaString(tibula.ejaValues.passwordOld)~="" and ejaString(tibula.ejaValues.passwordNew)~="" and ejaString(tibula.ejaValues.passwordNew)==ejaString(tibula.ejaValues.passwordNewRepeat) then
+   if ejaSqlRun("UPDATE ejaUsers SET password=''%s'' WHERE ejaId=%d AND (password=''%s'' OR password=''%s'');",ejaSha256(tibula.ejaValues.passwordNew),tibula.ejaOwner,ejaSha256(tibula.ejaValues.passwordOld),tibula.ejaValues.passwordOld) then
+    tibulaInfo("Password changed")
+   end
+  else
+   tibulaInfo("Password problem")
+  end
+ end
+ ' WHERE ejaId=2;
+UPDATE ejaPermissions SET ejaCommandId=13 where ejaId=71;
+
