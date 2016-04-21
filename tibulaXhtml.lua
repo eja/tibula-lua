@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Magyar rapszódiák
 
@@ -32,16 +32,16 @@ end
 function tibulaXhtmlHeader() 	--return xhtml header and open form
  local r="";
  
- r=sf('<!DOCTYPE html>');
- r=r..sf('<html lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
- r=r..sf('<head>');
- r=r..sf('<meta charset="utf-8">')
- r=r..sf('<meta name="author" content="ubaldo@eja.it">')
- r=r..sf('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
- r=r..sf('<script type="text/javascript" src="http://cdn.tibula.net/tibula.js"></script>');
- r=r..sf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
- r=r..sf('</head>');
- r=r..sf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula['ejaLanguage']);
+ r=ejaSprintf('<!DOCTYPE html>');
+ r=r..ejaSprintf('<html lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
+ r=r..ejaSprintf('<head>');
+ r=r..ejaSprintf('<meta charset="utf-8">')
+ r=r..ejaSprintf('<meta name="author" content="ubaldo@eja.it">')
+ r=r..ejaSprintf('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+ r=r..ejaSprintf('<script type="text/javascript" src="http://cdn.tibula.net/tibula.js"></script>');
+ r=r..ejaSprintf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
+ r=r..ejaSprintf('</head>');
+ r=r..ejaSprintf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula['ejaLanguage']);
 
  return r;
 end
@@ -50,10 +50,10 @@ end
 function tibulaXhtmlFooter()	--return xhtml closed tags 
  local r=""
  
- if ejaCheck(tibula['ejaId']) then r=r..sf('<input type="hidden" name="ejaId" value="%d"/>',tibula['ejaId']); end
- if ejaCheck(tibula['ejaModuleId']) then r=r..sf('<input type="hidden" name="ejaModuleId" value="%d"/>',tibula['ejaModuleId']); end
- if ejaCheck(tibula['ejaSession']) then r=r..sf('<input type="hidden" name="ejaSession" value="%s"/>',tibula['ejaSession']); end
- r=r..sf('</form></div></body></html>');
+ if ejaCheck(tibula['ejaId']) then r=r..ejaSprintf('<input type="hidden" name="ejaId" value="%d"/>',tibula['ejaId']); end
+ if ejaCheck(tibula['ejaModuleId']) then r=r..ejaSprintf('<input type="hidden" name="ejaModuleId" value="%d"/>',tibula['ejaModuleId']); end
+ if ejaCheck(tibula['ejaSession']) then r=r..ejaSprintf('<input type="hidden" name="ejaSession" value="%s"/>',tibula['ejaSession']); end
+ r=r..ejaSprintf('</form></div></body></html>');
  
  return r;
 end
@@ -67,24 +67,24 @@ function tibulaXhtmlMenu(moduleId)		 --return the modules reverse traversal tree
  r='<div id="ejaMenu">';
   
   r=r..'<div id="ejaMenuPath">'
-  r=r..sf('<a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=35248">%s</a>',tibula['ejaSession'],moduleId,tibulaTranslate("ejaRoot"));
+  r=r..ejaSprintf('<a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=35248">%s</a>',tibula['ejaSession'],moduleId,tibulaTranslate("ejaRoot"));
   for i=#a['pathId'],1,-1 do
-   r=r..sf(' <a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=%d">%s</a>',tibula['ejaSession'],moduleId,a['pathId'][i],tibulaTranslate(a['pathName'][i]));
+   r=r..ejaSprintf(' <a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=%d">%s</a>',tibula['ejaSession'],moduleId,a['pathId'][i],tibulaTranslate(a['pathName'][i]));
   end
   r=r..'</div>';
  
   r=r..'<div id="ejaMenuLinks">';
   for i=1,#a['treeId'] do
-   r=r..sf(' <a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=%d">%s</a>',tibula['ejaSession'],moduleId,a['treeId'][i],tibulaTranslate(a['treeName'][i]));
+   r=r..ejaSprintf(' <a href="?ejaSession=%s&amp;ejaModuleId=%d&amp;ejaModuleChange=%d">%s</a>',tibula['ejaSession'],moduleId,a['treeId'][i],tibulaTranslate(a['treeName'][i]));
   end
   r=r.."</div>";
 
   r=r..'<div id="ejaModuleLinks">';   
   for i=1,#a['linkId'] do
-   r=r..sf('<a href="?ejaSession=%s&amp;ejaModuleChange=%d&amp;ejaModuleLink=%d.%d">%s</a> ',tibula['ejaSession'],a['linkId'][i],tibula['ejaModuleId'],tibula['ejaId'],tibulaTranslate(a['linkName'][i]));
+   r=r..ejaSprintf('<a href="?ejaSession=%s&amp;ejaModuleChange=%d&amp;ejaModuleLink=%d.%d">%s</a> ',tibula['ejaSession'],a['linkId'][i],tibula['ejaModuleId'],tibula['ejaId'],tibulaTranslate(a['linkName'][i]));
   end
   for i=1,#a['historyId'] do
-   r=r..sf(' <a class="active" href="?ejaSession=%s&amp;ejaModuleLinkBack=%d">%s</a>',tibula['ejaSession'],a['historyId'][i],tibulaTranslate(a['historyName'][i]));
+   r=r..ejaSprintf(' <a class="active" href="?ejaSession=%s&amp;ejaModuleLinkBack=%d">%s</a>',tibula['ejaSession'],a['historyId'][i],tibulaTranslate(a['historyName'][i]));
   end
   r=r..'</div>'; 
  
@@ -122,7 +122,7 @@ function tibulaXhtmlModule(moduleId) 	--return the module.
   r=tibulaXhtmlHelp(tibula['ejaActionType'],tibula['ejaModuleId'],tibula['ejaLanguage']); 
  end
  
- r=sf('<div id="ejaModule" class="ejaModule%s">%s</div>',tibulaUCFirst(moduleName),r);
+ r=ejaSprintf('<div id="ejaModule" class="ejaModule%s">%s</div>',tibulaUCFirst(moduleName),r);
 
  return r;
 end
@@ -133,7 +133,7 @@ function tibulaXhtmlCommand(moduleId) 	--return the html list of enabled command
  local command="";
  
  for k,v in ipairs(tibulaSqlCommandArray(tibula['ejaOwner'],moduleId,tibula['ejaActionType'])) do
-  command=sf(' <input id="ejaCommand%s" type="submit" name="ejaAction[%s]" value="%s"/>',tibulaUCFirst(v),v,tibulaTranslate(v));
+  command=ejaSprintf(' <input id="ejaCommand%s" type="submit" name="ejaAction[%s]" value="%s"/>',tibulaUCFirst(v),v,tibulaTranslate(v));
   if not ejaCheck(tibula['ejaSqlQuery64']) and ejaCheck(v,"list") then command=""; end
   if ejaCheck(tibula['ejaSearchStep']) then 
    if not ejaCheck(tibula['ejaSqlLimit']) and ejaCheck(v,"previous") then command=""; end
@@ -154,28 +154,28 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  local r="";
 
  if ejaCheck(fieldType,"label") then 
-  r=r..sf('<div class="ejaModule%s">%s</div>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
+  r=r..ejaSprintf('<div class="ejaModule%s">%s</div>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
  end 
  
  if ejaCheck(fieldType,"sqlTable") or ( ejaCheck(fieldType,"view") and ejaCheck(fieldValueArray) ) then 
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend>%s</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlTable(fieldValueArray,0));
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlTable(fieldValueArray,0));
  end 
 
  if ejaCheck(fieldType,"text") or ejaCheck(fieldType,"password") then
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
  end
 
  if ejaCheck(fieldType,"integer") or ejaCheck(fieldType,"integerRange") or ejaCheck(fieldType,"decimal") then
   if ejaCheck(fieldType,"integerRange") and ejaCheck(tibula['ejaActionType'],"Search") then
    if not ejaCheck(tibula['ejaValues'][fieldName..".begin"]) then tibula['ejaValues'][fieldName..".begin"]=""; end
    if not ejaCheck(tibula['ejaValues'][fieldName..".end"]) then tibula['ejaValues'][fieldName..".end"]=""; end
-   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s"/></label>',tibulaTranslate("ejaIntegerFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"]);  
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s"/></label>',tibulaTranslate("ejaIntegerTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);  
-   r=r..sf('</fieldset>');
+   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
+   r=r..ejaSprintf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s"/></label>',tibulaTranslate("ejaIntegerFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"]);  
+   r=r..ejaSprintf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s"/></label>',tibulaTranslate("ejaIntegerTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);  
+   r=r..ejaSprintf('</fieldset>');
   else
    if not tibula['ejaValues'][fieldName] then fieldValue=""; else fieldValue=tibula['ejaValues'][fieldName]; end 
-   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
+   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
   end
  end
 
@@ -185,28 +185,28 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
   if ejaCheck(fieldType,"htmlArea") then 
    class='class="jsEditor"';
    fieldValue=tibulaXhtmlFilter(fieldValue); 
-   title=sf('%s',tibulaTranslate(fieldName));
+   title=ejaSprintf('%s',tibulaTranslate(fieldName));
   end
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><textarea %s name="ejaValues[%s]">%s</textarea></fieldset>',tibulaUCFirst(fieldType),title,class,fieldName,fieldValue);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><textarea %s name="ejaValues[%s]">%s</textarea></fieldset>',tibulaUCFirst(fieldType),title,class,fieldName,fieldValue);
  end
 
  if (string.find("#date#dateRange#time#timeRange#datetime#datetimeRange#",fieldType)) then
   if string.find(fieldType,"Range") and ejaCheck(tibula['ejaActionType'],"Search") then
    if not ejaCheck(tibula['ejaValues'][fieldName..".begin"]) then tibula['ejaValues'][fieldName..".begin"]="" end
    if not ejaCheck(tibula['ejaValues'][fieldName..".end"]) then tibula['ejaValues'][fieldName..".end"]="" end
-   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s" /></label>',tibulaTranslate("ejaDateFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"]);  
-   r=r..sf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s" /></label>',tibulaTranslate("ejaDateTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);
-   r=r..sf('</fieldset>');
+   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
+   r=r..ejaSprintf('<label>%s<input type="text" name="ejaValues[%s.begin]" value="%s" /></label>',tibulaTranslate("ejaDateFrom"),fieldName,tibula['ejaValues'][fieldName..".begin"]);  
+   r=r..ejaSprintf('<label>%s<input type="text" name="ejaValues[%s.end]" value="%s" /></label>',tibulaTranslate("ejaDateTo"),fieldName,tibula['ejaValues'][fieldName..".end"]);
+   r=r..ejaSprintf('</fieldset>');
   else
-   r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="text" name="ejaValues[%s]" value="%s" /></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldName,fieldValue);
+   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="text" name="ejaValues[%s]" value="%s" /></fieldset>',string.sub(tibulaUCFirst(fieldType),0,-5),tibulaTranslate(fieldName),fieldName,fieldValue);
   end
  end
 
  if ejaCheck(fieldType,"boolean") then
   if ejaCheck(fieldValue) then options='<option value="1" selected="selected">TRUE</option><option value="0">FALSE</option>'; else options='<option value="1">TRUE</option><option value="0" selected="selected">FALSE</option>'; end
   if ejaCheck(tibula['ejaActionType'],"Search") then options='<option></option><option value="1">TRUE</option><option value="0">FALSE</option>'; end
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><select name="ejaValues[%s]">%s</select></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldName,options);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><select name="ejaValues[%s]">%s</select></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldName,options);
  end
 
  if ejaCheck(fieldType,"select") or ejaCheck(fieldType,"sqlMatrix") then
@@ -214,25 +214,25 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
   local selected="";
   for k,v in ipairs(getmetatable(fieldValueArray)) do
    if ejaCheck(fieldValue,v) then selected=' selected="selected"'; else selected=""; end
-    options=options..sf('<option value="%s"%s>%s</option>',v,selected,fieldValueArray[v]);
+    options=options..ejaSprintf('<option value="%s"%s>%s</option>',v,selected,fieldValueArray[v]);
   end
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><select name="ejaValues[%s]"><option></option>%s</select></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldName,options);   
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><select name="ejaValues[%s]"><option></option>%s</select></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldName,options);   
  end
 
  if ejaCheck(fieldType,"sqlValue") then
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><b>%s</b></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldValue); 
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><b>%s</b></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldValue); 
  end
  
  if ejaCheck(fieldType,"view") and not ejaCheck(fieldValueArray) then
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend>%s&nbsp;</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlFilter(fieldValue));
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s&nbsp;</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlFilter(fieldValue));
  end
  
  if ejaCheck(fieldType,"hidden") then
-  r=r..sf('<fieldset class="ejaModule%s"><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),fieldType,fieldName,fieldValue);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),fieldType,fieldName,fieldValue);
  end
  
  if ejaCheck(fieldType,"file") then 
-  r=r..sf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="%s" onClick="ejaForm.enctype=\'multipart/form-data\'"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName);  
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="%s" onClick="ejaForm.enctype=\'multipart/form-data\'"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName);  
  end
  
  return r;
@@ -253,15 +253,15 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
    for k,v in pairs(getmetatable(sqlArray)) do 
     if (k==1 and t>0) then 
      r=r..'<th class="mini"><input type="checkbox" name="ejaIdCheckAll" /></th>'; 
-     if (t == 2) then r=r..sf('<th class="mini">%s</th>',tibulaTranslate("powerLink")); end
+     if (t == 2) then r=r..ejaSprintf('<th class="mini">%s</th>',tibulaTranslate("powerLink")); end
     else 
      if (t == 1 or t == 2) then
       options="<option></option>";
-      if ejaCheck(tibula['ejaSearchOrder']) and ejaCheck(tibula['ejaSearchOrder'][v],"ASC") or string.find(tibula['ejaSqlOrder']," "..v.." ASC") then options=options..sf('<option value="ASC" selected="selected">AZ</option>'); else options=options..sf('<option value="ASC">AZ</option>'); end
-      if ejaCheck(tibula['ejaSearchOrder']) and ejaCheck(tibula['ejaSearchOrder'][v],"DESC") or string.find(tibula['ejaSqlOrder']," "..v.." DESC") then options=options..sf('<option value="DESC" selected="selected">ZA</option>'); else options=options..sf('<option value="DESC">ZA</option>'); end
-      r=r..sf('<th>%s</th><th class="mini"><select name="ejaSearchOrder[%s]">%s</select></th>',tibulaTranslate(v),v,options); 
+      if ejaCheck(tibula['ejaSearchOrder']) and ejaCheck(tibula['ejaSearchOrder'][v],"ASC") or string.find(tibula['ejaSqlOrder']," "..v.." ASC") then options=options..ejaSprintf('<option value="ASC" selected="selected">AZ</option>'); else options=options..ejaSprintf('<option value="ASC">AZ</option>'); end
+      if ejaCheck(tibula['ejaSearchOrder']) and ejaCheck(tibula['ejaSearchOrder'][v],"DESC") or string.find(tibula['ejaSqlOrder']," "..v.." DESC") then options=options..ejaSprintf('<option value="DESC" selected="selected">ZA</option>'); else options=options..ejaSprintf('<option value="DESC">ZA</option>'); end
+      r=r..ejaSprintf('<th>%s</th><th class="mini"><select name="ejaSearchOrder[%s]">%s</select></th>',tibulaTranslate(v),v,options); 
      else
-      r=r..sf('<th colspan="2">%s</th>',tibulaTranslate(v)); 
+      r=r..ejaSprintf('<th colspan="2">%s</th>',tibulaTranslate(v)); 
      end
     end
    end
@@ -273,9 +273,9 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
   for k,v in pairs(getmetatable(sqlArray)) do
    x=x+1;
    if row[v] then value=row[v] else value="" end
-   if s(v) == "ejaId" and t > 0 then 
+   if ejaString(v) == "ejaId" and t > 0 then 
     ejaIdRow=value;
-    r=r..sf('<td><input type="checkbox" name="ejaId[%d]" value="%d" /></td>',value,value); 
+    r=r..ejaSprintf('<td><input type="checkbox" name="ejaId[%d]" value="%d" /></td>',value,value); 
     if t == 2 then
      local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      if not ejaCheck(sql) then 
@@ -283,13 +283,13 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
       sql['ejaId']=0; 
       sql['power']=0;
      end
-     r=r..sf('<td class="powerLink"><input type="text" name="ejaLinkPower[%d][%d]" value="%d" onClick="ejaIdCheck(%d)"/></td>',value,sql['ejaId'],sql['power'],value);
+     r=r..ejaSprintf('<td class="powerLink"><input type="text" name="ejaLinkPower[%d][%d]" value="%d" onClick="ejaIdCheck(%d)"/></td>',value,sql['ejaId'],sql['power'],value);
     end
    else 
     if t == 3 then
-     r=r..sf('<td class="powerLink" colspan="2"><input type="text" name="ejaValues[%s.%d]" value="%s"/></td>',v,ejaIdRow,value); 
+     r=r..ejaSprintf('<td class="powerLink" colspan="2"><input type="text" name="ejaValues[%s.%d]" value="%s"/></td>',v,ejaIdRow,value); 
     else
-     r=r..sf('<td colspan="2">%s</td>',value); 
+     r=r..ejaSprintf('<td colspan="2">%s</td>',value); 
     end
    end
   end
@@ -298,7 +298,7 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
  end
  
  if ejaCheck(tibula['ejaSqlCountTotal']) then
-  r=r..sf('<tr><th colspan="%d">%d-%d / %d</th></tr>',(x*2),tibula['ejaSqlLimit']+1,(tibula['ejaSqlLimit']+tibula['ejaSqlCount']),tibula['ejaSqlCountTotal']);
+  r=r..ejaSprintf('<tr><th colspan="%d">%d-%d / %d</th></tr>',(x*2),tibula['ejaSqlLimit']+1,(tibula['ejaSqlLimit']+tibula['ejaSqlCount']),tibula['ejaSqlCountTotal']);
  end
  
  r=r..'</table>';
@@ -311,7 +311,7 @@ function tibulaXhtmlHelp(actionType, moduleId, language) 	--return xml help for 
  local r="";
  
  r=ejaSqlRun("SELECT text FROM ejaHelps WHERE (ejaModuleId=0 OR ejaModuleId=%d) AND (actionType='%s' OR actionType='') AND ejaLanguage='%s' ORDER BY actionType DESC, ejaModuleId DESC LIMIT 1;",moduleId,actionType,language) or "";
- return sf('<div id="ejaModuleHelps">%s</div>',r); 
+ return ejaSprintf('<div id="ejaModuleHelps">%s</div>',r); 
 end
 
 function tibulaXhtmlInfo() 	--return an alert/info box
@@ -319,7 +319,7 @@ function tibulaXhtmlInfo() 	--return an alert/info box
  local info="";
  
  if ejaCheck(tibula['ejaActionType']) and ejaCheck(tibula['ejaAction']) then info="alert"..tibula['ejaActionType']..tibulaUCFirst(tibula['ejaAction']) end
- r=sf('<div id="ejaInfo">%s</div>',tibulaInfo(info)); 
+ r=ejaSprintf('<div id="ejaInfo">%s</div>',tibulaInfo(info)); 
 
  return r;
 end

@@ -16,7 +16,7 @@ eja.help.tibulaStop='stop tibula [web port] {35248}'
 eja.opt.webSize=65536
 
 function tibulaStart() 
- if n(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
+ if ejaNumber(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.sqlDatabase);
  if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
   tibulaTableStart();
@@ -27,8 +27,8 @@ end
 
 function tibulaStop()
  ejaInfo('[tibula] halting on web port %s',eja.opt.webPort);
- if n(eja.opt.tibulaStop) > 0 then eja.opt.webPort=eja.opt.tibulaStop end
- ejaPidKillTree(sf('web_%d',eja.opt.webPort or 35248))
+ if ejaNumber(eja.opt.tibulaStop) > 0 then eja.opt.webPort=eja.opt.tibulaStop end
+ ejaPidKillTree(ejaSprintf('web_%d',eja.opt.webPort or 35248))
 end
 
 

@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
 
 
 eja.help.sqlType='db type (mysql|sqlite3) {sqlite3}'
@@ -21,8 +21,7 @@ function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--
  ejaSqlType=sqlType
   
  if ejaFileStat(eja.pathLib..'luasql/'..sqlType..'.so') then 
-  if sqlType == "sqlite3" then eja.sql=require "luasql.sqlite3" end
-  if sqlType == "mysql" then eja.sql=require "luasql.mysql" end
+  eja.sql=require "luasql."..sqlType
  else
   ejaError('[sql] %s library missing',sqlType)
   return nil
@@ -37,7 +36,7 @@ function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--
    ejaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase);
    if ejaSqlConnection then
     ejaSqlConnection:execute("PRAGMA journal_mode = MEMORY;");
-    if sqlPassword ~= "" then ejaSqlConnection:execute(sf("PRAGMA key = '%s';",sqlPassword)); end
+    if sqlPassword ~= "" then ejaSqlConnection:execute(ejaSprintf("PRAGMA key = '%s';",sqlPassword)); end
     ejaSqlConnection:execute("PRAGMA temp_store = MEMORY;");
    end
   end
@@ -136,7 +135,7 @@ end
 function ejaSqlTableCreate(tableName)	--create a new table if it does not exist
  local r=0;
  
- if s(tableName) ~= "" and not ejaSqlRun('SELECT * FROM %s LIMIT 1;',tableName) then
+ if ejaString(tableName) ~= "" and not ejaSqlRun('SELECT * FROM %s LIMIT 1;',tableName) then
   local extra="";
   if ejaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end
   if ejaSqlRun('CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
@@ -154,7 +153,7 @@ function ejaSqlTableColumnCreate(tableName, columnName, columnType) 	--add a new
  local r=0;   
  local dataType=ejaSqlTableDataType(columnType);
 
- if s(dataType) ~= "" and not ejaSqlRun('SELECT %s FROM %s LIMIT 1',columnName,tableName) then
+ if ejaString(dataType) ~= "" and not ejaSqlRun('SELECT %s FROM %s LIMIT 1',columnName,tableName) then
   if ejaSqlRun('ALTER TABLE %s ADD %s %s;',tableName,columnName,dataType) then
    r=1;
   else
@@ -192,16 +191,16 @@ end
 function ejaSqlUnixTime(value)	--?convert value to unix or sql timestamp
  local r="";
  
- if eq(ejaSqlType,"sqlite3") then 
-  if n(value) > 0 then
+ if ejaString(ejaSqlType) == "sqlite3" then 
+  if ejaNumber(value) > 0 then
    r=ejaSqlRun("SELECT datetime(%d, 'unixepoch');",value);
   else
    r=ejaSqlRun("SELECT strftime('%%s','%s');",value); 
   end
  end
  
- if eq(ejaSqlType,"mysql") then 
-  if n(value) > 0 then
+ if ejaString(ejaSqlType) == "mysql" then 
+  if ejaNumber(value) > 0 then
    r=ejaSqlRun("SELECT FROM_UNIXTIME(%d);",value);
   else
    r=ejaSqlRun("SELECT UNIX_TIMESTAMP('%s');",value); 
@@ -220,25 +219,26 @@ end
 function ejaSqlTableDataType(sType)	--return sql data type syntax for sType data type
  local dType="";
 
- if eq(sType,"boolean") then 		dType="INTEGER(1) DEFAULT 0"; 	end
- if eq(sType,"integer") then 		dType="INTEGER DEFAULT 0"; 	end
- if eq(sType,"integerRange") then 	dType="INTEGER DEFAULT 0"; 	end
- if eq(sType,"decimal") then 		dType="DECIMAL(10,2)"; 		end
- if eq(sType,"date") then 		dType="DATE"; 			end
- if eq(sType,"dateRange") then		dType="DATE"; 			end
- if eq(sType,"time") then 		dType="TIME"; 			end
- if eq(sType,"timeRange") then	 	dType="TIME"; 			end
- if eq(sType,"datetime") then 		dType="DATETIME"; 		end
- if eq(sType,"datetimeRange") then 	dType="DATETIME"; 		end
- if eq(sType,"text") then 		dType="CHAR(255)"; 		end
- if eq(sType,"hidden") then 		dType="CHAR(255)"; 		end
- if eq(sType,"view") then 		dType="CHAR(255)"; 		end
- if eq(sType,"select") then 		dType="TEXT"; 			end
- if eq(sType,"sqlValue") then 		dType="TEXT"; 			end
- if eq(sType,"sqlHidden") then		dType="TEXT"; 			end
- if eq(sType,"sqlMatrix") then		dType="TEXT"; 			end
- if eq(sType,"textArea") then 		dType="MEDIUMTEXT"; 		end
- if eq(sType,"htmlArea") then 		dType="MEDIUMTEXT"; 		end
+ sType=ejaString(sType)
+ if sType=="boolean" 		then dType="INTEGER(1) DEFAULT 0";	end
+ if sType=="integer"		then dType="INTEGER DEFAULT 0"; 	end
+ if sType=="integerRange"	then dType="INTEGER DEFAULT 0";		end
+ if sType=="decimal" 		then dType="DECIMAL(10,2)"; 		end
+ if sType=="date" 		then dType="DATE"; 			end
+ if sType=="dateRange" 		then dType="DATE"; 			end
+ if sType=="time" 		then dType="TIME"; 			end
+ if sType=="timeRange" 		then dType="TIME"; 			end
+ if sType=="datetime" 		then dType="DATETIME"; 			end
+ if sType=="datetimeRange"	then dType="DATETIME"; 			end
+ if sType=="text" 		then dType="CHAR(255)"; 		end
+ if sType=="hidden"	 	then dType="CHAR(255)"; 		end
+ if sType=="view" 		then dType="CHAR(255)"; 		end
+ if sType=="select" 		then dType="TEXT"; 			end
+ if sType=="sqlValue" 		then dType="TEXT"; 			end
+ if sType=="sqlHidden" 		then dType="TEXT"; 			end
+ if sType=="sqlMatrix" 		then dType="TEXT"; 			end
+ if sType=="textArea" 		then dType="MEDIUMTEXT"; 		end
+ if sType=="htmlArea"		then dType="MEDIUMTEXT"; 		end
 
  return dType;
 end

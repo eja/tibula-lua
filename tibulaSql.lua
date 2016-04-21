@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Prelude Op. 23 No. 5
 
@@ -22,7 +22,7 @@ end
 
 
 function ejaSqlQuery(query,...)	--filter sql query 
- query=sf(query,...); 
+ query=ejaSprintf(query,...); 
  
  if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
   query=string.gsub(query,"@ejaOwner",tibula['ejaOwner']);
@@ -36,7 +36,7 @@ end
 
 function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for active module and ownerId
  local moduleId;
- if n(tibula['ejaModuleLink']) > 0 and n(tibula['ejaModuleChange']) > 0 then moduleId=tibula['ejaModuleChange']; else moduleId=tibula['ejaModuleId']; end
+ if ejaNumber(tibula['ejaModuleLink']) > 0 and ejaNumber(tibula['ejaModuleChange']) > 0 then moduleId=tibula['ejaModuleChange']; else moduleId=tibula['ejaModuleId']; end
 
  local groupOwners=ejaSqlIncludeList("SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaModules') AND srcFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') )) AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers');",ownerId,moduleId);
 
@@ -44,7 +44,7 @@ function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for 
  local sub=ownerId;
  local deep=10;
  local value="0";
- while n(deep) > 0 do
+ while ejaNumber(deep) > 0 do
   deep=deep-1;
   value=ejaSqlIncludeList('SELECT ejaId FROM ejaUsers WHERE ejaOwner IN (%s) AND ejaId NOT IN (%s);',sub,sub);
   if ejaCheck(value) then 
@@ -229,7 +229,7 @@ function tibulaSqlSearchMatrix(query,moduleId) 	--return an associative array fo
  if ejaCheck(moduleName) then x=string.find(query,"FROM "..moduleName.." WHERE"); end
  if ejaCheck(x) then
   local queryCountFrom=string.sub(query,x,-1);
-  local queryCount=sf('SELECT COUNT(*) %s',queryCountFrom)
+  local queryCount=ejaSprintf('SELECT COUNT(*) %s',queryCountFrom)
   if ejaCheck(queryCount) then
    local k,l=1,1;
    while l do 
@@ -266,7 +266,7 @@ function tibulaSqlSearchHeader(query,moduleId) 	--return an associative array wi
     head[v['name']]['value']=tibulaSelectSqlToArray(v['value']); 
    end
    if ejaCheck(v['type'],"sqlValue") or ejaCheck(v['type'],"sqlHidden") then 
-    query=string.gsub(query,v['name'], sf('(%s) AS %s',v['value'],v['name']) ); 
+    query=string.gsub(query,v['name'], ejaSprintf('(%s) AS %s',v['value'],v['name']) ); 
    end
    if ejaCheck(v['translate']) then head[v['name']]['translation']=v['translate'] else head[v['name']]['translation']=0; end
   end

@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2015 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Polonaise héroïque
 
@@ -40,7 +40,7 @@ function tibulaTableImport(a)	--import data into eja table
 
   if string.sub(key,1,6) == "ejaId[" then
    if not tibula['ejaIdArray'] then tibula['ejaIdArray']={}; end
-   if n(tibula['ejaId']) < 1 then tibula['ejaId']=value; end
+   if ejaNumber(tibula['ejaId']) < 1 then tibula['ejaId']=value; end
    table.insert(tibula['ejaIdArray'],value)
   end 
 
@@ -145,7 +145,7 @@ function tibulaTableRun()	--main tibula engine
  end
  
  -- ejaSession semaphore
- if n(tibula['ejaOwner']) < 1 then 
+ if ejaNumber(tibula['ejaOwner']) < 1 then 
   tibula['ejaModuleId']=ejaSqlRun("SELECT ejaId FROM ejaModules WHERE name='ejaLogin'");
   tibula['ejaModuleName']="ejaLogin";
   tibula['ejaLanguage']=tibula['ejaDefaultLanguage'];
@@ -192,7 +192,7 @@ function tibulaTableRun()	--main tibula engine
   end   
 
   --Fill or update ejaModuleName
-  if n(tibula['ejaModuleId']) > 0 then tibula['ejaModuleName']=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId']) or 'eja'; end
+  if ejaNumber(tibula['ejaModuleId']) > 0 then tibula['ejaModuleName']=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId']) or 'eja'; end
    
   --Fill ejaCommands
   tibula['ejaCommands']={}
@@ -286,8 +286,8 @@ function tibulaTableRun()	--main tibula engine
     if ejaCheck(tibula['ejaModuleName'],"ejaModules") and ejaCheck(tibula['ejaAction'],"save") then	-- create table on database and add permissions
      if ejaCheck(tibula['ejaValues']['sqlCreated']) then
       local tableCreate=ejaSqlTableCreate(tibula['ejaValues']['name']);  
-      if n(tableCreate) > 0 then tibulaInfo("ejaSqlModuleCreated"); end
-      if n(tableCreate) < 0 then tibulaInfo("ejaSqlModuleNotCreated"); end
+      if ejaNumber(tableCreate) > 0 then tibulaInfo("ejaSqlModuleCreated"); end
+      if ejaNumber(tableCreate) < 0 then tibulaInfo("ejaSqlModuleNotCreated"); end
      end
      if not ejaCheck(ejaSqlRun('SELECT COUNT(*) FROM ejaPermissions WHERE ejaModuleId=%d;',tibula['ejaId'])) then
       if ejaCheck(tibula['ejaValues']['sqlCreated']) then
@@ -322,8 +322,8 @@ function tibulaTableRun()	--main tibula engine
     --create table column
     if ejaCheck(tibula['ejaModuleName'],"ejaFields") and ejaCheck(tibula['ejaValues']['name']) and ejaCheck(tibula['ejaValues']['type']) and ejaCheck(tibula['ejaValues']['ejaModuleId']) then
      local fieldCreate=ejaSqlTableColumnCreate(ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',tibula['ejaValues']['ejaModuleId']), tibula['ejaValues']['name'], tibula['ejaValues']['type'])
-     if n(fieldCreate) > 0 then tibulaInfo("ejaSqlFieldCreated"); end
-     if n(fieldCreate) < 0 then tibulaInfo("ejaSqlFieldNotCreated"); end
+     if ejaNumber(fieldCreate) > 0 then tibulaInfo("ejaSqlFieldCreated"); end
+     if ejaNumber(fieldCreate) < 0 then tibulaInfo("ejaSqlFieldNotCreated"); end
     end
     
    end
@@ -375,7 +375,7 @@ function tibulaTableRun()	--main tibula engine
      for k,v in pairs(ejaSqlMatrix('SELECT name,type FROM ejaFields WHERE ejaModuleId=%d;',tibula['ejaModuleId'])) do   
       sqlType[v['name']]=v['type'];
      end
-     sql=sql..sf(' FROM %s WHERE ejaOwner IN (%s)',tibula['ejaModuleName'],tibula['ejaOwnerList']);
+     sql=sql..ejaSprintf(' FROM %s WHERE ejaOwner IN (%s)',tibula['ejaModuleName'],tibula['ejaOwnerList']);
      if ejaCheck(tibula['ejaValues']) then
       for k,v in pairs (tibula['ejaValues']) do
        if ejaCheck(v) and not string.find(k,"%.") then 
@@ -383,16 +383,16 @@ function tibulaTableRun()	--main tibula engine
         v=string.gsub(v,"*","%%");
         v=string.gsub(v,"%%","%%%%");
         if ejaCheck(sqlType[k],"boolean") or ejaCheck(sqlType[k],"integer") then 
-         sqlAnd=sf(' AND %s = %d ',k,v); 
+         sqlAnd=ejaSprintf(' AND %s = %d ',k,v); 
         end
         if ejaCheck(sqlType[k],"date") or ejaCheck(sqlType[k],"time") or ejaCheck(sqlType[k],"datetime") then 
-         sqlAnd=sf(" AND %s='%s' ",k,tibulaDateSet(v,sqlType[k])); 
+         sqlAnd=ejaSprintf(" AND %s='%s' ",k,tibulaDateSet(v,sqlType[k])); 
         end
         if ejaCheck(sqlType[k],"dateRange") or ejaCheck(sqlType[k],"timeRange") or ejaCheck(sqlType[k],"datetimeRange") or ejaCheck(sqlType[k],"integerRange") then
-         if ejaCheck(tibula['ejaValues'][k..".begin"]) then sqlAnd=sqlAnd..sf(" AND %s > '%s' ",k,tibulaDateSet(tibula['ejaValues'][k..".begin"],"")); end
-         if ejaCheck(tibula['ejaValues'][k..".end"]) then sqlAnd=sqlAnd..sf(" AND %s < '%s' ",k,tibulaDateSet(tibula['ejaValues'][k..".end"],"")); end
+         if ejaCheck(tibula['ejaValues'][k..".begin"]) then sqlAnd=sqlAnd..ejaSprintf(" AND %s > '%s' ",k,tibulaDateSet(tibula['ejaValues'][k..".begin"],"")); end
+         if ejaCheck(tibula['ejaValues'][k..".end"]) then sqlAnd=sqlAnd..ejaSprintf(" AND %s < '%s' ",k,tibulaDateSet(tibula['ejaValues'][k..".end"],"")); end
         end
-        if not ejaCheck(sqlAnd) then sqlAnd=sf(" AND %s LIKE '%s'",k,v); end
+        if not ejaCheck(sqlAnd) then sqlAnd=ejaSprintf(" AND %s LIKE '%s'",k,v); end
         sql=sql..sqlAnd;
        end
       end
@@ -400,17 +400,17 @@ function tibulaTableRun()	--main tibula engine
      --if linking restrict search to active links. If srcFieldName is present in ejaModuleLinks use this to restrict search.
      if ejaCheck(tibula['ejaAction'],"searchLink") and not ejaCheck(tibula['ejaModuleName'],"ejaFiles") then
       if ejaCheck(tibula['ejaModuleName'],"ejaFiles") then 
-       sql=sql..sf(" AND ejaModuleId=%d AND ejaFieldId=%d ",tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
+       sql=sql..ejaSprintf(" AND ejaModuleId=%d AND ejaFieldId=%d ",tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
       else
        if ejaCheck(tibula['ejaLinkingField']) then
-        sql=sql..sf(" AND ejaId IN (SELECT ejaId FROM %s WHERE %s=%d AND ejaOwner IN (%s)) ",tibula['ejaModuleName'],tibula['ejaLinkingField'],tibula['ejaLinkFieldId'],tibula['ejaOwnerList']);
+        sql=sql..ejaSprintf(" AND ejaId IN (SELECT ejaId FROM %s WHERE %s=%d AND ejaOwner IN (%s)) ",tibula['ejaModuleName'],tibula['ejaLinkingField'],tibula['ejaLinkFieldId'],tibula['ejaOwnerList']);
        else
-        sql=sql..sf(" AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d) ",tibula['ejaModuleId'],tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']); 
+        sql=sql..ejaSprintf(" AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d) ",tibula['ejaModuleId'],tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']); 
        end
       end
      end
      if ejaCheck(tibula['ejaModuleName'],"ejaFiles") and ejaCheck(tibula['ejaLinking']) then
-      sql=sql..sf(" AND ejaModuleId=%d AND ejaFieldId=%d ",tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
+      sql=sql..ejaSprintf(" AND ejaModuleId=%d AND ejaFieldId=%d ",tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      end                   
      tibula['ejaSqlQuery64']=ejaBase64Encode(sql);
     end
@@ -429,7 +429,7 @@ function tibulaTableRun()	--main tibula engine
     end
     --finish query construction
     tibula['ejaSqlQueryRaw']=sql;
-    tibula['ejaSqlQuery']=sf('%s ORDER BY %s LIMIT %d,%d;',sql,tibula['ejaSqlOrder'],tibula['ejaSqlLimit'],tibula['ejaSearchStep']);
+    tibula['ejaSqlQuery']=ejaSprintf('%s ORDER BY %s LIMIT %d,%d;',sql,tibula['ejaSqlOrder'],tibula['ejaSqlLimit'],tibula['ejaSearchStep']);
     tibula['ejaId']=0;
    end
 

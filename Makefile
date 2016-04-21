@@ -1,60 +1,43 @@
-ejaPath=/opt/eja.it
-ejaVersion=$(shell date +%y%m%d%H%M)
+prefix = "/usr/local"
+ejaPathBin=$(prefix)/bin/eja
+ejaPathLib=$(prefix)/lib/eja
+ejaVersion = $(shell date +%y%m%d%H%M)
 
 
-all:  tibula
+all:  sqlite3 mysql tibula
 
-
-eja: $(ejaPath)
+eja:
 	@-  git clone https://github.com/ubaldus/eja.git eja
 	@  cd eja && make 
 	
-
-$(ejaPath):
-	@- mkdir -p $(ejaPath)/bin
-	@- mkdir -p $(ejaPath)/lib
-	@- mkdir -p $(ejaPath)/var
-	@- mkdir -p $(ejaPath)/tmp
+$(prefix)/bin/eja:
+	@  cd eja && make prefix=$(prefix) install
 	
-	
-$(ejaPath)/bin/eja:
-	@  cd eja && make install
-	
+luasql:
+	@  git clone https://github.com/ubaldus/luasql.git luasql	
 
-$(ejaPath)/bkp:
-	@  mkdir -p $(ejaPath)/bkp
-
-
-mysql: eja
-	@- rm -Rf luasql
-	@  git clone https://github.com/ubaldus/luasql.git luasql
-	@  cd luasql && make LUA_LIBDIR=$(ejaPath)/lib/ CFLAGS="-I../eja/lua/src/ -fPIC " mysql install
+mysql: eja luasql
+	@  cd luasql && make LUA_LIBDIR="$(prefix)/lib/eja" CFLAGS="-I../eja/lua/src/ -fPIC " mysql install
 	@  make tibula
 
 
-sqlite3: eja
-	@- rm -Rf luasql
-	@  git clone https://github.com/ubaldus/luasql.git luasql
-	@  cd luasql && make LUA_LIBDIR=$(ejaPath)/lib/ CFLAGS="-I../eja/lua/src/ -fPIC " sqlite3 install
+sqlite3: eja luasql
+	@  cd luasql && make LUA_LIBDIR="$(prefix)/lib/eja" CFLAGS="-I../eja/lua/src/ -fPIC " sqlite3 install
 	@  make tibula
 
 
-tibula: eja
-	@  cat *.lua > $(ejaPath)/lib/tibula.lua
-	@  eja/eja --export $(ejaPath)/lib/tibula.lua
-	@- rm $(ejaPath)/lib/tibula.lua	
+tibula:
+	@  cat *.lua > $(prefix)/lib/eja/tibula.lua
+	@  eja --export $(prefix)/lib/eja/tibula.lua
+	@- rm $(prefix)/lib/eja/tibula.lua	
 	
-
-backup: $(ejaPath)/bkp
-	tar zcR ../tibula > $(ejaPath)/bkp/ejaTibula-$(ejaVersion).tar.gz
-
 
 clean:
-	@- rm $(ejaPath)/lib/tibula.eja
+	@- rm $(prefix)/lib/eja/tibula.eja
 
 
 clean-sql:
-	@- rm -Rf $(ejaPath)/lib/luasql
+	@- rm -Rf $(prefix)/lib/eja/luasql
 	@- rm -Rf luasql
 
 
@@ -65,17 +48,13 @@ clean-eja:
 clean-all: clean clean-sql clean-eja
 
 
-update: clean-all backup
+install: $(prefix)/bin/eja tibula
+
+
+update: clean-all
 	@  git add .
 	@- git commit
 	@  git push -u origin master
-	@  scp /opt/eja.it/bkp/ejaTibula-$(ejaVersion).tar.gz ubaldu@frs.sourceforge.net:/home/frs/project/tibula/tibula-$(ejaVersion).tar.gz
+	@  tar zcR ../tibula > /tmp/ejaTibula-$(ejaVersion).tar.gz
+	@  scp /tmp/ejaTibula-$(ejaVersion).tar.gz ubaldu@frs.sourceforge.net:/home/frs/project/tibula/tibula-$(ejaVersion).tar.gz
 	
-
-install: $(ejaPath)/bin/eja tibula
-
-
-uninstall: clean-all
-	@- rm ${ejaPath}/bin/eja
-
-
