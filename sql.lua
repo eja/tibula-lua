@@ -21,7 +21,8 @@ function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--
  ejaSqlType=sqlType
   
  if ejaFileStat(eja.pathLib..'luasql/'..sqlType..'.so') then 
-  eja.sql=require "luasql."..sqlType
+  if sqlType == "sqlite3" then eja.sql=require "luasql.sqlite3" end
+  if sqlType == "mysql" then eja.sql=require "luasql.mysql" end
  else
   ejaError('[sql] %s library missing',sqlType)
   return nil
