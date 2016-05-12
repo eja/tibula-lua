@@ -224,7 +224,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  end
  
  if ejaCheck(fieldType,"view") and not ejaCheck(fieldValueArray) then
-  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s&nbsp;</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlFilter(fieldValue));
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s&nbsp;</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldValue);
  end
  
  if ejaCheck(fieldType,"hidden") then
