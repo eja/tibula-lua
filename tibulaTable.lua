@@ -90,7 +90,7 @@ function tibulaTableImport(a)	--import data into eja table
 end
 
 
-function tibulaTableRun()	--main tibula engine 
+function tibulaTableRun(web)	--main tibula engine 
  if ejaCheck(tibula['ejaModuleName']) then tibula['ejaModuleId']=ejaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",tibula['ejaModuleName']) end
  if not ejaCheck(tibula['ejaModuleId']) then tibula['ejaModuleId']=ejaSqlRun("SELECT ejaId FROM ejaModules WHERE name='eja';") end
  if not ejaCheck(tibula['ejaModuleId']) then tibula['ejaModuleId']=1 end
@@ -199,7 +199,7 @@ function tibulaTableRun()	--main tibula engine
   for k,v in pairs ( tibulaSqlCommandArray(tibula['ejaOwner'],tibula['ejaModuleId'],"") ) do tibula['ejaCommands'][v]=k; end
 
   --run lua script for this ejaModuleId and save tibula into ejaSessions
-  tibulaModuleLua(0);
+  tibulaModuleLua(0,web);
   tibulaSessionWrite(tibula['ejaOwner'],tibula);
 
   --Actions engine, runs only if ejaAction is in ejaSqlCommandList
@@ -459,7 +459,7 @@ function tibulaTableRun()	--main tibula engine
  end
   
  -- lua module script last call.
- tibulaModuleLua(1);
+ tibulaModuleLua(1,web);
 end
 
 

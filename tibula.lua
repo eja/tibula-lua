@@ -40,7 +40,7 @@ function tibulaWeb(web)
  end
  
  tibulaTableImport(web.opt);
- tibulaTableRun()
+ tibulaTableRun(web)
  web.data=tibulaTableExport()
 
  for k,v in next,tibula.ejaHttpHeaders do web.headerOut[k]=v; end
