@@ -39,6 +39,16 @@ function tibulaWeb(web)
   tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
  end
  
+ if web and web.postFile and web.headerIn and web.headerIn['content-type'] == 'application/json' then
+  local a=ejaJsonFileRead(web.postFile)
+  if a then 
+   for k,v in next,a do
+    web.opt[k]=v
+   end
+   web.opt.ejaOut='json' 
+  end
+ end
+
  tibulaTableImport(web.opt);
  tibulaTableRun(web)
  web.data=tibulaTableExport()

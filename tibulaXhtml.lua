@@ -3,29 +3,21 @@
 -- Magyar rapszódiák
 
 
-function tibulaXhtmlRun(moduleId,blocks) 	--return xhtml page in "|" separater blocks
- local r="" 
-
- if not ejaCheck(blocks) then blocks="header,menu,module,info,command,footer"; end
- for block in string.gmatch(blocks,"(%w+)") do
-  if ejaCheck(block,"header") then r=r..tibulaXhtmlHeader(); end   
-  if ejaCheck(block,"menu") then r=r.."\n"..tibulaXhtmlMenu(moduleId); end 
-  if ejaCheck(block,"module") then r=r.."\n"..tibulaXhtmlModule(moduleId); end
-  if ejaCheck(block,"info") then r=r.."\n"..tibulaXhtmlInfo(); end
-  if ejaCheck(block,"command") then r=r.."\n"..tibulaXhtmlCommand(moduleId); end
-  if ejaCheck(block,"footer") then r=r.."\n"..tibulaXhtmlFooter(); end 
- end
-
- return r;
-end
-
-
-function tibulaXhtmlExport(data)         --export data as xhtml output
+function tibulaXhtmlExport(moduleId)         --export data as xhtml output
  tibula['ejaHttpHeaders']["Content-Type"]="text/html; charset=utf-8"
  tibula['ejaHttpHeaders']["Pragma"]="no-cache";
  tibula['ejaHttpHeaders']["Expires"]= "-1";
  tibula['ejaHttpHeaders']["Cache-Control"]="no-cache";
- return data; 
+ 
+ local r=''
+ r=r..tibulaXhtmlHeader()
+ r=r..tibulaXhtmlMenu(moduleId)
+ r=r..tibulaXhtmlModule(moduleId)
+ r=r..tibulaXhtmlInfo()
+ r=r..tibulaXhtmlCommand(moduleId)
+ r=r..tibulaXhtmlFooter();
+ 
+ return r; 
 end
 
 
