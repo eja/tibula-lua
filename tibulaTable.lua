@@ -21,7 +21,6 @@ function tibulaTableImport(a)	--import data into eja table
   if type(value) ~= "table" then value=ejaUrlDecode(value) end
 
   if ejaCheck(key,"ejaId")  then tibula['ejaId']=value;  end
-  if ejaCheck(key,"ejaOut") then tibula['ejaOut']=value; end --xhtml/xml/json
   if ejaCheck(key,"ejaAction") then tibula['ejaAction']=value; end
   if ejaCheck(key,"ejaSession") then tibula['ejaSession']=value; end
   if ejaCheck(key,"ejaModuleId") then tibula['ejaModuleId']=value; end
@@ -34,7 +33,9 @@ function tibulaTableImport(a)	--import data into eja table
   if ejaCheck(key,"ejaModuleChange") then tibula['ejaModuleChange']=value; end
   if ejaCheck(key,"ejaModuleLinkBack") then tibula['ejaModuleLinkBack']=value; end
   if ejaCheck(key,"ejaDirectory") and not string.find(value,"%.%.") then tibula['ejaDirectory']=value; end
-  
+  if ejaCheck(key,"ejaOut") then tibula['ejaOut']=value; end	--xhtml/xml/json
+  if ejaCheck(key,"ejaOutSession") then tibula['ejaOutSession']=value; end
+   
   if string.sub(key,1,10) == "ejaAction[" then tibula['ejaAction']=string.sub(string.match(key,"%[%w+%]"),2,-2); end
   if ejaCheck(key,"ejaAction") then tibula['ejaAction']=value; end
 
@@ -103,6 +104,7 @@ function tibulaTableRun(web)	--main tibula engine
  if not ejaCheck(tibula['ejaValues']) then tibula['ejaValues']={} end
  if not ejaCheck(tibula['ejaIdArray']) and ejaCheck(tibula['ejaId']) then tibula['ejaIdArray']={}; table.insert(tibula['ejaIdArray'],tibula['ejaId']) end
  if not ejaCheck(tibula['ejaOut']) then tibula['ejaOut']="xhtml" end
+ if not ejaCheck(tibula['ejaOutSession'],1) then tibula['ejaOutSession']=1; end
 
  --login, set a random session value and retrieve defaultModuleId 
  if ejaCheck(tibula['ejaAction'],"login") and ejaCheck(tibula['ejaValues']['username']) and ejaCheck(tibula['ejaValues']['password']) then 
@@ -125,7 +127,7 @@ function tibulaTableRun(web)	--main tibula engine
    --set ejaLanguage
    if ejaCheck(user['ejaLanguage']) then tibula['ejaLanguage']=user['ejaLanguage']; end
    --fill tibula from ejaSessions
-   if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaOut'],"xhtml") and not ejaCheck(tibula['ejaAction'],"csvExport") and not ejaCheck(tibula['ejaAction'],"xmlExport") then tibulaSessionRead(tibula['ejaOwner']); end 
+   if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaOutSession'],1) and not ejaCheck(tibula['ejaAction'],"csvExport") and not ejaCheck(tibula['ejaAction'],"xmlExport") then tibulaSessionRead(tibula['ejaOwner']); end 
   --fill eja with the list and the array of other owners data enabled views
    tibula['ejaOwnerList']=tibulaSqlOwnerList(tibula['ejaOwner']); 
    if not ejaCheck(tibula['ejaOwners']) then tibula['ejaOwners']={}; end
@@ -287,7 +289,7 @@ function tibulaTableRun(web)	--main tibula engine
    end
 
    --save and copy (must be after "new" for "copy" to work). update data also if ejaAction=new and we are in batch mode (xml) 
-   if ejaCheck(tibula['ejaValues']) and ( ( ejaCheck(tibula['ejaAction'],"save") or ejaCheck(tibula['ejaAction'],"copy") ) or ( not ejaCheck(tibula['ejaOut'],"xhtml") and ejaCheck(tibula['ejaAction'],"new") ) or ( ejaCheck(tibula['ejaAction'],"searchLink") and ejaCheck(tibula['ejaId']) ) ) then
+   if ejaCheck(tibula['ejaValues']) and ( ( ejaCheck(tibula['ejaAction'],"save") or ejaCheck(tibula['ejaAction'],"copy") ) or ( ejaCheck(tibula['ejaOutSession'],0) and ejaCheck(tibula['ejaAction'],"new") ) or ( ejaCheck(tibula['ejaAction'],"searchLink") and ejaCheck(tibula['ejaId']) ) ) then
     if ejaCheck(tibula['ejaModuleName'],"ejaModules") and ejaCheck(tibula['ejaAction'],"save") then	-- create table on database and add permissions
      if ejaCheck(tibula['ejaValues']['sqlCreated']) then
       local tableCreate=ejaSqlTableCreate(tibula['ejaValues']['name']);  
@@ -479,7 +481,7 @@ function tibulaTableExport()
 end 
 
 function tibulaTableStop()
- if not ejaCheck(tibula['ejaOut'],"xhtml") then
+ if not ejaCheck(tibula['ejaOutSession'],1) then
   tibulaSessionWrite(tibula['ejaOwner'],{});
  else
   --Update ejaSession
