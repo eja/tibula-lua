@@ -61,17 +61,19 @@ function tibulaTableImport(a)	--import data into eja table
    end
   end 
   
-  if string.sub(key,1,12) == "ejaLinkPower" then 
+  if string.sub(key,1,13) == "ejaLinkPower[" then 
    if type(tibula['ejaLinkPower']) ~= "table" then tibula['ejaLinkPower']={} end
    for k,v in string.gmatch(string.sub(key,12),"%[(%w+)%]%[(%w+)%]") do 
     tibula['ejaLinkPower'][k]=v.."."..value
    end
   end
+  if ejaCheck(key,"ejaLinkPower") and type(value) == 'table' then tibula['ejaLinkPower']=value; end
   
-  if string.sub(key,1,14) == "ejaSearchOrder" and ejaCheck(value) then
+  if string.sub(key,1,15) == "ejaSearchOrder[" and ejaCheck(value) then
    if type(tibula['ejaSearchOrder']) ~= "table" then tibula['ejaSearchOrder']={} end
    tibula['ejaSearchOrder'][string.sub(string.match(key,"%[%w+%]"),2,-2)]=value; 
   end 
+  if ejaCheck(key,"ejaSearchOrder") and type(value) == 'table' then tibula['ejaSearchOrder']=value; end
   
   if string.sub(key,1,10) == "ejaValues[" then
    if type(tibula['ejaValues']) ~= "table" then tibula['ejaValues']={} end
@@ -92,6 +94,8 @@ function tibulaTableImport(a)	--import data into eja table
    end
   end
   if ejaCheck(key,"ejaValues") and type(value) == 'table' then tibula['ejaValues']=value; end
+
+
  end 
 end
 

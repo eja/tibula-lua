@@ -56,20 +56,20 @@ function tibulaJsonMenu(moduleId)
  
   a.ejaMenuPath={}
   for i=#aa['pathId'],1,-1 do
-   a.ejaMenuPath[#a.ejaMenuPath+1]={ ejaModuleChange=aa['pathId'][i], label=tibulaTranslate(aa['pathName'][i]) }
+   a.ejaMenuPath[#a.ejaMenuPath+1]={ ejaModuleChange=aa['pathId'][i], name=aa['pathName'][i], label=tibulaTranslate(aa['pathName'][i]) }
   end
 
   a.ejaMenuLinks={} 
   for i=1,#aa['treeId'] do
-   a.ejaMenuLinks[#a.ejaMenuLinks+1]={ ejaModuleChange=aa['treeId'][i], label=tibulaTranslate(aa['treeName'][i]) }
+   a.ejaMenuLinks[#a.ejaMenuLinks+1]={ ejaModuleChange=aa['treeId'][i], name=aa['treeName'][i], label=tibulaTranslate(aa['treeName'][i]) }
   end
 
   a.ejaModuleLinks={}
   for i=1,#aa['linkId'] do
-   a.ejaModuleLinks[#a.ejaModuleLinks+1]={ ejaModuleChange=aa['linkId'][i], ejaModuleLink=tibula['ejaModuleId']..'.'..tibula['ejaId'], label=tibulaTranslate(aa['linkName'][i]) }
+   a.ejaModuleLinks[#a.ejaModuleLinks+1]={ ejaModuleChange=aa['linkId'][i], ejaModuleLink=tibula['ejaModuleId']..'.'..tibula['ejaId'], name=aa['linkName'][i], label=tibulaTranslate(aa['linkName'][i]) }
   end
   for i=1,#aa['historyId'] do
-   a.ejaModuleLinks[#a.ejaModuleLinks+1]={ ejaModuleLinkBack=aa['historyId'][i], label=tibulaTranslate(aa['historyName'][i]) }
+   a.ejaModuleLinks[#a.ejaModuleLinks+1]={ ejaModuleLinkBack=aa['historyId'][i], name=aa['historyName'][i], label=tibulaTranslate(aa['historyName'][i]) }
   end
 
  return a;
@@ -125,18 +125,27 @@ end
 
 function tibulaJsonTable(sqlArray,t) 	--return json table of results for t. t=0 output plain table, t=1 first column is ejaId; t=2 first column ejaId, second powerLink.
  local a={}
- 
+ local y=0
+
  a.ejaTableList={}
+ a.ejaTableHeader={}
  
  for key,row in pairs (sqlArray) do
+  y=y+1
 
   local ax={}
   for k,v in pairs(getmetatable(sqlArray)) do
+   if y == 1 then a.ejaTableHeader[v]=tibulaTranslate(v) end
    if row[v] then value=row[v] else value="" end
    if ejaString(v) == "ejaId" and t > 0 then 
     ax[#ax+1]={ ejaId=value }
     if t == 2 then
      local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%s AND dstModuleId=%s AND dstFieldId=%s;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
+     if not ejaCheck(sql) then 
+      sql={}
+      sql['ejaId']=0; 
+      sql['power']=0;
+     end
      ax[#ax]={ ejaId=value, ejaLinkPowerValue=ejaNumber(sql.power), ejaLinkPowerId=ejaNumber(sql.ejaId) }
     end
    else
@@ -148,11 +157,11 @@ function tibulaJsonTable(sqlArray,t) 	--return json table of results for t. t=0 
   a.ejaTableList[#a.ejaTableList+1]=ax
  end
 
- 
  if ejaCheck(tibula['ejaSqlCountTotal']) then
   a.ejaTableCountTotal=tibula.ejaSqlCountTotal
   a.ejaTableLimit=tibula.ejaSqlLimit
   a.ejaTableCount=tibula.ejaSqlCount
+  a.ejaTableSearchOrder=tibula.ejaSearchOrder
  end
  
  return a;
