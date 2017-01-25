@@ -39,15 +39,28 @@ function tibulaWeb(web)
   tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
  end
  
- if web and web.postFile and web.headerIn and web.headerIn['content-type'] == 'application/json' then
-  local a=ejaJsonFileRead(web.postFile)
-  if a then 
-   for k,v in next,a do
-    web.opt[k]=v
+ if web and web.postFile and web.headerIn then
+  if web.headerIn['content-type'] == 'application/json' then
+   local a=ejaJsonFileRead(web.postFile)
+   if a then 
+    for k,v in next,a do
+     web.opt[k]=v
+    end
+    web.opt.ejaOut='json' 
    end
-   web.opt.ejaOut='json' 
   end
+  if web.headerIn['content-type'] == 'application/octet-stream' then
+   local file=ejaFileRead(web.postFile)
+   local a={}
+   a.hash=ejaSha256(file)
+   ejaFileMove(web.postFile,eja.pathVar..'/tibula/data/'..a.hash)
+   web.headerOut['Content-Type'] = 'application/json'
+   web.data=ejaJsonEncode(a)
+   return web
+  end
+  ejaFileRemove(web.postFile)
  end
+
 
  tibulaTableImport(web.opt);
  tibulaTableRun(web)
