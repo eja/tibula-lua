@@ -12,6 +12,7 @@ function tibulaTableStart()	--set default eja table value
  tibula['ejaHttpHeaders']={}
  tibula['ejaSqlType']=ejaSqlType;
  tibula['ejaLanguage']=tibula['ejaLanguage'] or tibula['ejaDefaultLanguage'];
+ tibula['path']=eja.opt.tibulaPath or eja.pathVar..'/tibula/'
 end
 
 

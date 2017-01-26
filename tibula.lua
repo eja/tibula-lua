@@ -13,9 +13,11 @@ eja.lib.tibulaStart='tibulaStart'
 
 eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
+eja.help.tibulaPath='tibula data path'
 eja.opt.webSize=65536
 
 function tibulaStart() 
+
  if ejaNumber(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.sqlDatabase);
  if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
@@ -53,7 +55,7 @@ function tibulaWeb(web)
    local file=ejaFileRead(web.postFile)
    local a={}
    a.hash=ejaSha256(file)
-   ejaFileMove(web.postFile,eja.pathVar..'/tibula/data/'..a.hash)
+   ejaFileMove(web.postFile,tibula.path..a.hash)
    web.headerOut['Content-Type'] = 'application/json'
    web.data=ejaJsonEncode(a)
    web.opt=nil
@@ -63,7 +65,7 @@ function tibulaWeb(web)
 
  if web.opt then
   if web.opt.data and web.opt.data:match('^[%x]+$') then
-   web.file=eja.pathVar..'/tibula/data/'..web.opt.data
+   web.file=tibula.path..web.opt.data
    web.headerOut['Content-Disposition']='attachment; filename="'..web.opt.data..'"'
   else 
    tibulaTableImport(web.opt);
