@@ -234,6 +234,7 @@ function ejaSqlTableDataType(sType)	--return sql data type syntax for sType data
  if sType=="text" 		then dType="CHAR(255)"; 		end
  if sType=="hidden"	 	then dType="CHAR(255)"; 		end
  if sType=="view" 		then dType="CHAR(255)"; 		end
+ if sType=="file" 		then dType="CHAR(255)"; 		end
  if sType=="select" 		then dType="TEXT"; 			end
  if sType=="sqlValue" 		then dType="TEXT"; 			end
  if sType=="sqlHidden" 		then dType="TEXT"; 			end
