@@ -39,7 +39,7 @@ function tibulaWeb(web)
   tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
  end
  
- if web and web.postFile and web.headerIn then
+ if web.postFile and web.headerIn then
   if web.headerIn['content-type'] == 'application/json' then
    local a=ejaJsonFileRead(web.postFile)
    if a then 
@@ -56,19 +56,24 @@ function tibulaWeb(web)
    ejaFileMove(web.postFile,eja.pathVar..'/tibula/data/'..a.hash)
    web.headerOut['Content-Type'] = 'application/json'
    web.data=ejaJsonEncode(a)
-   return web
+   web.opt=nil
   end
   ejaFileRemove(web.postFile)
  end
 
-
- tibulaTableImport(web.opt);
- tibulaTableRun(web)
- web.data=tibulaTableExport()
-
- for k,v in next,tibula.ejaHttpHeaders do web.headerOut[k]=v; end
-
- tibulaTableStop()
+ if web.opt then
+  if web.opt.data and web.opt.data:match('^[%x]+$') then
+   web.file=eja.pathVar..'/tibula/data/'..web.opt.data
+   web.headerOut['Content-Disposition']='attachment; filename="'..web.opt.data..'"'
+  else 
+   tibulaTableImport(web.opt);
+   tibulaTableRun(web)
+   web.data=tibulaTableExport()
+   for k,v in next,tibula.ejaHttpHeaders do web.headerOut[k]=v; end
+   tibulaTableStop()
+  end
+ end
+ 
  return web
 end
 
