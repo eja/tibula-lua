@@ -65,8 +65,13 @@ function tibulaWeb(web)
 
  if web.opt then
   if web.opt.data and web.opt.data:match('^[%x]+$') then
-   web.file=tibula.path..web.opt.data
-   web.headerOut['Content-Disposition']='attachment; filename="'..web.opt.data..'"'
+   local path=tibula.path..web.opt.data
+   if ejaFileCheck(path) then
+    web.headerOut['Content-Disposition']='attachment; filename="'..web.opt.data..'"'
+    web.file=path
+   else
+    web.status='404 Not Found'
+   end
   else 
    tibulaTableImport(web.opt);
    tibulaTableRun(web)
