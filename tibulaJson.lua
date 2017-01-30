@@ -135,10 +135,13 @@ function tibulaJsonTable(sqlArray,t) 	--return json table of results for t. t=0 
 
   local ax={}
   for k,v in pairs(getmetatable(sqlArray)) do
-   if y == 1 then a.ejaTableHeader[v]=tibulaTranslate(v) end
+   if y == 1 then 
+    a.ejaTableHeader[#a.ejaTableHeader+1]={}
+    a.ejaTableHeader[#a.ejaTableHeader][v]=tibulaTranslate(v)
+   end
    if row[v] then value=row[v] else value="" end
    if ejaString(v) == "ejaId" and t > 0 then 
-    ax[#ax+1]={ ejaId=value }
+    ax.ejaId=value 
     if t == 2 then
      local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%s AND dstModuleId=%s AND dstFieldId=%s;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      if not ejaCheck(sql) then 
@@ -146,12 +149,12 @@ function tibulaJsonTable(sqlArray,t) 	--return json table of results for t. t=0 
       sql['ejaId']=0; 
       sql['power']=0;
      end
-     ax[#ax]={ ejaId=value, ejaLinkPowerValue=ejaNumber(sql.power), ejaLinkPowerId=ejaNumber(sql.ejaId) }
+     ax.ejaId=value
+     ax.ejaLinkPowerValue=ejaNumber(sql.power)
+     ax.ejaLinkPowerId=ejaNumber(sql.ejaId) 
     end
    else
-    local an={}; 
-    an[v]=value
-    ax[#ax+1]=an
+    ax[v]=value
    end
   end
   a.ejaTableList[#a.ejaTableList+1]=ax
