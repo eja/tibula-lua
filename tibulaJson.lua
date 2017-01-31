@@ -107,7 +107,9 @@ function tibulaJsonField(fieldName, fieldType, fieldValue, fieldValueArray) 	--r
  a.value=fieldValue
  
  if ejaCheck(fieldType,"sqlTable") or ( ejaCheck(fieldType,"view") and ejaCheck(fieldValueArray) ) then 
-  a.list=tibulaJsonTable(fieldValueArray,0).ejaTableList
+  local aa=tibulaJsonTable(fieldValueArray,0)
+  a.list=aa.ejaTableList
+  a.head=aa.ejaTableHeader
  end 
 
  if ejaCheck(fieldType,"select") or ejaCheck(fieldType,"sqlMatrix") then
