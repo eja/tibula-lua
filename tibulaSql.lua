@@ -296,7 +296,7 @@ function tibulaSqlSearchRowFilter(head,row) 	--return filtered row with translat
   if ejaCheck(k,1) then 
    a[v]=value; 
   else 
-   if ejaCheck(head[v]['translation']) then a[v]=tibulaTranslate(value);  else  a[v]=value; end
+   if head and head[v] and head[v]['translation'] then a[v]=tibulaTranslate(value);  else  a[v]=value; end
   end
   
  end
