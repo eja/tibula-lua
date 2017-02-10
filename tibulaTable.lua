@@ -109,7 +109,7 @@ function tibulaTableRun(web)	--main tibula engine
  if not ejaCheck(tibula['ejaValues']) then tibula['ejaValues']={} end
  if not ejaCheck(tibula['ejaIdArray']) and ejaCheck(tibula['ejaId']) then tibula['ejaIdArray']={}; table.insert(tibula['ejaIdArray'],tibula['ejaId']) end
  if not ejaCheck(tibula['ejaOut']) then tibula['ejaOut']="xhtml" end
- if not ejaCheck(tibula['ejaOutSession'],1) then tibula['ejaOutSession']=1; end
+ if not tibula['ejaOutSession'] then tibula['ejaOutSession']=1; end
 
  --login, set a random session value and retrieve defaultModuleId 
  if ejaCheck(tibula['ejaAction'],"login") and ejaCheck(tibula['ejaValues']['username']) and ejaCheck(tibula['ejaValues']['password']) then 

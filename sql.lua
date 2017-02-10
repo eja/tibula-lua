@@ -31,6 +31,7 @@ function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--
  if eja.sql then 
   if sqlType=="mysql" then 
    ejaSqlConnection=eja.sql.mysql():connect(sqlDatabase,sqlUsername,sqlPassword,sqlHostname);
+    ejaSqlConnection:execute("SET SESSION sql_mode = '';");
   end
  
   if sqlType=="sqlite3" then
