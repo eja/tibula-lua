@@ -1141,7 +1141,7 @@ INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,70,15,13,1);
 INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,71,15,13,1);
 UPDATE ejaModules SET lua='if ejaNumber(tibulaModuleLuaStep)==0 and ejaNumber(tibula.ejaOwner) > 0 and ejaString(tibula.ejaAction)=="run" then
   if ejaString(tibula.ejaValues.passwordOld)~="" and ejaString(tibula.ejaValues.passwordNew)~="" and ejaString(tibula.ejaValues.passwordNew)==ejaString(tibula.ejaValues.passwordNewRepeat) then
-   if ejaSqlRun("UPDATE ejaUsers SET password=''%s'' WHERE ejaId=%d AND (password=''%s'' OR password=''%s'');",ejaSha256(tibula.ejaValues.passwordNew),tibula.ejaOwner,ejaSha256(tibula.ejaValues.passwordOld),tibula.ejaValues.passwordOld) then
+   if tibulaSqlRun("UPDATE ejaUsers SET password=''%s'' WHERE ejaId=%d AND (password=''%s'' OR password=''%s'');",ejaSha256(tibula.ejaValues.passwordNew),tibula.ejaOwner,ejaSha256(tibula.ejaValues.passwordOld),tibula.ejaValues.passwordOld) then
     tibulaInfo("Password changed")
    end
   else

@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Nocturne no.20
 
@@ -14,7 +14,7 @@ end
 
 function tibulaModuleLua(step,web)	--load lua script from ejaModule 
  tibulaModuleLuaStep=step
- local script=ejaSqlRun('SELECT lua FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId'])
+ local script=tibulaSqlRun('SELECT lua FROM ejaModules WHERE ejaId=%d;',tibula['ejaModuleId'])
  if ejaString(script) ~= '' then
    local func,err=loadstring(script,tibula['ejaModuleName'])(web)
    if func then 
@@ -28,7 +28,7 @@ end
 
 function tibulaSessionRead(ownerId)      --return the ejaSessions array for $ownerId
  if ejaNumber(ownerId) > 0 then
-  for k,v in pairs(ejaSqlMatrix('SELECT name,sub,value FROM ejaSessions WHERE ejaOwner=%d ORDER BY ejaId ASC;',ownerId)) do
+  for k,v in pairs(tibulaSqlMatrix('SELECT name,sub,value FROM ejaSessions WHERE ejaOwner=%d ORDER BY ejaId ASC;',ownerId)) do
    if ejaString(v['sub']) ~= "" then 
     if not tibula[v['name']] then tibula[v['name']]={}; end
     tibula[v['name']][v['sub']]=v['value'];
@@ -42,21 +42,21 @@ end
 
 function tibulaSessionWrite(ownerId,values)	--write the ejaSession array 
  if ejaNumber(ownerId) > 0 then  
-  ejaSqlRun('SET @ejaOwner=%d;',ownerId);
-  ejaSqlRun('DELETE FROM ejaSessions WHERE ejaOwner=%d;',ownerId);
+  tibulaSqlRun('SET @ejaOwner=%d;',ownerId);
+  tibulaSqlRun('DELETE FROM ejaSessions WHERE ejaOwner=%d;',ownerId);
   for k,v in pairs(values) do
    if type(v) == "table" then
     for kk,vv in pairs(v) do
      if type(vv) ~= "table" then
-      ejaSqlRun("INSERT INTO ejaSessions (ejaLog,ejaOwner,name, sub, value) VALUES ('%s',%d,'%s','%s','%s');",ejaSqlNow(),ownerId,k,kk,vv);
+      tibulaSqlRun("INSERT INTO ejaSessions (ejaLog,ejaOwner,name, sub, value) VALUES ('%s',%d,'%s','%s','%s');",tibulaSqlNow(),ownerId,k,kk,vv);
      end
     end
    else
-    ejaSqlRun('INSERT INTO ejaSessions (ejaLog,ejaOwner,name, value) VALUES ("%s",%d,"%s","%s");',ejaSqlNow(),ownerId,k,v); 
+    tibulaSqlRun('INSERT INTO ejaSessions (ejaLog,ejaOwner,name, value) VALUES ("%s",%d,"%s","%s");',tibulaSqlNow(),ownerId,k,v); 
    end
   end
  else
-  ejaSqlRun('SET @ejaOwner=0;');
+  tibulaSqlRun('SET @ejaOwner=0;');
  end 
 end
 
@@ -77,7 +77,7 @@ function tibulaTranslate(value)	--return translated value for active module and 
  if not tibula['ejaTranslation'] then
   tibula['ejaTranslation']={};
   tibula['ejaTranslation']['Eja']='eja';
-  for k,v in pairs (ejaSqlMatrix("SELECT word,translation FROM ejaTranslations where ejaLanguage='%s' AND (ejaModuleId=0 OR ejaModuleId='' OR ejaModuleId=%d) ORDER BY ejaModuleId ASC;",tibula['ejaLanguage'],tibula['ejaModuleId'])) do --must be ORDER ASC to overwrite general translation with module one.
+  for k,v in pairs (tibulaSqlMatrix("SELECT word,translation FROM ejaTranslations where ejaLanguage='%s' AND (ejaModuleId=0 OR ejaModuleId='' OR ejaModuleId=%d) ORDER BY ejaModuleId ASC;",tibula['ejaLanguage'],tibula['ejaModuleId'])) do --must be ORDER ASC to overwrite general translation with module one.
    tibula['ejaTranslation'][v['word']]=v['translation'];
   end
  end

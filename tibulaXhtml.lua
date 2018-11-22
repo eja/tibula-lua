@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Magyar rapszódiák
 
@@ -88,7 +88,7 @@ end
 
 function tibulaXhtmlModule(moduleId) 	--return the module. 
  local r="";
- local moduleName=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',moduleId);
+ local moduleName=tibulaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',moduleId);
  local a={}
  
  if ejaCheck(tibula['ejaActionType'],"List") then
@@ -269,7 +269,7 @@ function tibulaXhtmlTable(sqlArray,t) 	--return html table of results for t. t=0
     ejaIdRow=value;
     r=r..ejaSprintf('<td><input type="checkbox" name="ejaId[%d]" value="%d" /></td>',value,value); 
     if t == 2 then
-     local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
+     local sql=tibulaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      if not ejaCheck(sql) then 
       sql={}
       sql['ejaId']=0; 
@@ -302,7 +302,7 @@ end
 function tibulaXhtmlHelp(actionType, moduleId, language) 	--return xml help for selected moduleId/language 
  local r="";
  
- r=ejaSqlRun("SELECT text FROM ejaHelps WHERE (ejaModuleId=0 OR ejaModuleId=%d) AND (actionType='%s' OR actionType='') AND ejaLanguage='%s' ORDER BY actionType DESC, ejaModuleId DESC LIMIT 1;",moduleId,actionType,language) or "";
+ r=tibulaSqlRun("SELECT text FROM ejaHelps WHERE (ejaModuleId=0 OR ejaModuleId=%d) AND (actionType='%s' OR actionType='') AND ejaLanguage='%s' ORDER BY actionType DESC, ejaModuleId DESC LIMIT 1;",moduleId,actionType,language) or "";
  return ejaSprintf('<div id="ejaModuleHelps">%s</div>',r); 
 end
 

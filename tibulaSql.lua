@@ -1,27 +1,286 @@
--- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Prelude Op. 23 No. 5
 
 
-function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) 
+eja.help.tibulaType='db type (maria|mysql|sqlite3) {maria}'
+eja.help.tibulaUsername='db username'
+eja.help.tibulaPassword='db password'
+eja.help.tibulaHostname='db hostname'
+eja.help.tibulaDatabase='db name'
 
- sqlType=sqlType or "sqlite3"
- sqlDatabase=sqlDatabase or eja.pathVar..'/tibula.db3'
+tibulaSqlType=nil
+tibulaSqlConnection=nil
+
+
+function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--start sql connection
+
+ local sqlType=sqlType or eja.opt.sqlType or "maria"
+ local sqlUsername=sqlUsername or eja.opt.tibulaUsername or eja.opt.sqlUsername -- eja.opt.sqlxxx deprecated
+ local sqlPassword=sqlPassword or eja.opt.tibulaPassword or eja.opt.sqlPassword
+ local sqlHostname=sqlHostname or eja.opt.tibulaHostname or eja.opt.sqlHostname
+ local sqlDatabase=sqlDatabase or eja.opt.tibulaDatabase or eja.opt.sqlDatabase
+
+ tibulaSqlType=sqlType
  
- if ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) then
-  if sqlType=="mysql" then
-   ejaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");   
-  elseif sqlType=="sqlite3" then
-   ejaSqlRun("CREATE TEMPORARY TABLE `ejaSessions` (`ejaId` integer NOT NULL primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` mediumtext, `sub` varchar(255) default NULL);")
-  end
-  return true
- else 
+ if sqlType == "maria" and eja.maria then
+  eja.sql=ejaMaria();
+ elseif ejaFileStat(eja.pathLib..'luasql/'..sqlType..'.so') then 
+  if sqlType == "sqlite3" then eja.sql=require "luasql.sqlite3" end
+  if sqlType == "mysql" then eja.sql=require "luasql.mysql" end
+ else
+  ejaError('[sql] %s library missing',sqlType)
   return nil
  end
+
+ if eja.sql then 
+  if sqlType=="maria" then
+   tibulaSqlConnection=ejaMariaOpen(sqlHostname,3306,sqlUsername,sqlPassword,sqlDatabase)
+   tibulaSqlRun("SET SESSION sql_mode = '';")
+   tibulaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");     
+  end
+ 
+  if sqlType=="mysql" then 
+   tibulaSqlConnection=eja.sql.mysql():connect(sqlDatabase,sqlUsername,sqlPassword,sqlHostname);
+   tibulaSqlRun("SET SESSION sql_mode = '';");
+   tibulaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");     
+  end
+ 
+  if sqlType=="sqlite3" then
+   tibulaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase);
+   if tibulaSqlConnection then
+    tibulaSqlRun("PRAGMA journal_mode = MEMORY;");
+    if sqlPassword ~= "" then tibulaSqlRun("PRAGMA key = '%s';",sqlPassword); end
+    tibulaSqlRun("PRAGMA temp_store = MEMORY;");
+   end
+  end
+ end
+
+ if tibulaSqlConnection then 
+  ejaDebug('[sql] %s connection open',sqlType) 
+ else
+  ejaError('[sql] %s connection error',sqlType)
+ end
+
+ return tibulaSqlConnection;   
 end
 
 
-function ejaSqlQuery(query,...)	--filter sql query 
+function tibulaSqlStop()	--stop sql connection
+ ejaDebug('[sql] %s connection closed',sqlType)
+ if tibulaSqlType=="maria" then return ejaMariaClose(); end
+ if tibulaSqlType=="mysql" then return tibulaSqlConnection:close(); end
+ if tibulaSqlType=="sqlite3" then return tibulaSqlConnection:close(); end
+end
+
+
+function tibulaSqlMatrix(query,...)	--sql multi rows array
+ query=tibulaSqlQuery(query,...);
+
+ local row={}; 
+ local rows={};
+ if tibulaSqlType == "maria" then
+  rows=ejaMariaQuery(query)
+  local cols={}
+  for rk,rv in next,getmetatable(rows) do
+   for rvk,rvv in next,rv do
+    if rvk=="name" then cols[#cols+1]=rvv end
+   end
+  end
+  setmetatable(rows,cols)
+ else
+  local cur=tibulaSqlConnection:execute(query);
+  if cur then
+   setmetatable(rows,cur:getcolnames(row));
+   row=cur:fetch({},"a");
+   while row do 
+    local a={}
+    table.insert(rows,row)
+    row=cur:fetch({}, "a");
+   end
+   cur:close();
+  end
+ end
+ 
+ return rows;
+end
+
+
+function tibulaSqlArray(query,...)	--sql last row array
+ query=tibulaSqlQuery(query,...);
+ 
+ local rowLast={}
+ if tibulaSqlType == "maria" then
+  for rk,rv in next,ejaMariaQuery(query) do
+   rowLast=rv
+  end
+ else
+  local cur=tibulaSqlConnection:execute(query);
+  if cur then
+   local row=cur:fetch({},"a");
+   rowLast=row;
+   while row do 
+    rowLast=row;
+    row=cur:fetch({}, "a");
+   end
+   cur:close();
+  end
+ end
+    
+ return rowLast;
+end
+
+
+function tibulaSqlRun(query,...)	--execute sql command 
+ query=tibulaSqlQuery(query,...);
+
+ local r;
+ if tibulaSqlType == "maria" then
+  rv=ejaMariaQuery(query) 
+  if rv then 
+   for k,v in next,rv do
+    if type(v) == "table" then
+     for kk,vv in next,v do r=vv end
+    else
+     r=v
+    end
+   end 
+  end
+ else
+  local cur=tibulaSqlConnection:execute(query);
+  if type(cur) == "userdata" then
+   local row=cur:fetch({},"n");
+   if row then 
+    r=row[1]
+   else 
+    r=false; 
+   end
+  else  
+    r=cur;
+  end
+  if cur and type(cur) ~= "number" then cur:close(); end
+ end
+ return r;
+end
+
+
+function tibulaSqlLastId()	--retrieve last inserted row id
+ if tibulaSqlType == "maria" then return tibulaSqlRun('SELECT LAST_INSERT_ID();'); end
+ if tibulaSqlType == "mysql" then return tibulaSqlRun('SELECT LAST_INSERT_ID();'); end
+ if tibulaSqlType == "sqlite3" then return tibulaSqlRun('SELECT last_insert_rowid();'); end
+end
+
+
+function tibulaSqlTableCreate(tableName)	--create a new table if it does not exist
+ local r=0;
+ 
+ if ejaString(tableName) ~= "" and not tibulaSqlRun('SELECT * FROM %s LIMIT 1;',tableName) then
+  local extra="";
+  if tibulaSqlType == "maria" then extra=" AUTO_INCREMENT "; end  
+  if tibulaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end  
+  if tibulaSqlRun('CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
+   r=1;
+  else 
+   r=-1;
+  end
+ end
+
+ return r;
+end
+
+
+function tibulaSqlTableColumnCreate(tableName, columnName, columnType) 	--add a new column field into a table if it does not exist
+ local r=0;   
+ local dataType=tibulaSqlTableDataType(columnType);
+
+ if ejaString(dataType) ~= "" and not tibulaSqlRun('SELECT %s FROM %s LIMIT 1',columnName,tableName) then
+  if tibulaSqlRun('ALTER TABLE %s ADD %s %s;',tableName,columnName,dataType) then
+   r=1;
+  else
+   r=-1;
+  end
+ end
+
+ return r;
+end
+
+
+function tibulaSqlIncludeList(query,...)   --return a comma separated list of values to be included in IN() clause (only first column will be addded).
+ local query=tibulaSqlQuery(query,...);
+ local r='';
+ local list=""; 
+ for rk,rv in next,tibulaSqlMatrix(query) do
+  local k,v=next(rv)
+  list=list..','..v
+ end
+ 
+ return string.sub(list,2);
+end
+
+
+function tibulaSqlNow()   --return actual datetime 
+ return os.date('%Y-%m-%d %H:%M:%S');
+end
+
+
+function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
+ local r="";
+ 
+ if tibulaSqlType == "sqlite3" then 
+  if ejaNumber(value) > 0 then
+   r=tibulaSqlRun("SELECT datetime(%d, 'unixepoch');",value);
+  else
+   r=tibulaSqlRun("SELECT strftime('%%s','%s');",value); 
+  end
+ end
+ 
+ if tibulaSqlType == "maria" or tibulaSqlType == "mysql" then 
+  if ejaNumber(value) > 0 then
+   r=tibulaSqlRun("SELECT FROM_UNIXTIME(%d);",value);
+  else
+   r=tibulaSqlRun("SELECT UNIX_TIMESTAMP('%s');",value); 
+  end
+ end
+ 
+ return r or 0;
+end
+
+
+function tibulaSqlEscape(data)	--escape data for sql
+  return string.gsub(data,"'", "''");
+end
+
+
+function tibulaSqlTableDataType(sType)	--return sql data type syntax for sType data type
+ local dType="";
+
+ sType=ejaString(sType)
+ if sType=="boolean" 		then dType="INTEGER(1) DEFAULT 0";	end
+ if sType=="integer"		then dType="INTEGER DEFAULT 0"; 	end
+ if sType=="integerRange"	then dType="INTEGER DEFAULT 0";		end
+ if sType=="decimal" 		then dType="DECIMAL(10,2)"; 		end
+ if sType=="date" 		then dType="DATE"; 			end
+ if sType=="dateRange" 		then dType="DATE"; 			end
+ if sType=="time" 		then dType="TIME"; 			end
+ if sType=="timeRange" 		then dType="TIME"; 			end
+ if sType=="datetime" 		then dType="DATETIME"; 			end
+ if sType=="datetimeRange"	then dType="DATETIME"; 			end
+ if sType=="text" 		then dType="CHAR(255)"; 		end
+ if sType=="hidden"	 	then dType="CHAR(255)"; 		end
+ if sType=="view" 		then dType="CHAR(255)"; 		end
+ if sType=="file" 		then dType="CHAR(255)"; 		end
+ if sType=="select" 		then dType="TEXT"; 			end
+ if sType=="sqlValue" 		then dType="TEXT"; 			end
+ if sType=="sqlHidden" 		then dType="TEXT"; 			end
+ if sType=="sqlMatrix" 		then dType="TEXT"; 			end
+ if sType=="textArea" 		then dType="MEDIUMTEXT"; 		end
+ if sType=="htmlArea"		then dType="MEDIUMTEXT"; 		end
+
+ return dType;
+end
+
+
+function tibulaSqlQuery(query,...)	--filter sql query 
  query=ejaSprintf(query,...); 
  
  if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
@@ -38,7 +297,7 @@ function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for 
  local moduleId;
  if ejaNumber(tibula['ejaModuleLink']) > 0 and ejaNumber(tibula['ejaModuleChange']) > 0 then moduleId=tibula['ejaModuleChange']; else moduleId=tibula['ejaModuleId']; end
 
- local groupOwners=ejaSqlIncludeList("SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaModules') AND srcFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') )) AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers');",ownerId,moduleId);
+ local groupOwners=tibulaSqlIncludeList("SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaModules') AND srcFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') )) AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers');",ownerId,moduleId);
 
  local ownerTree="";
  local sub=ownerId;
@@ -46,7 +305,7 @@ function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for 
  local value="0";
  while ejaNumber(deep) > 0 do
   deep=deep-1;
-  value=ejaSqlIncludeList('SELECT ejaId FROM ejaUsers WHERE ejaOwner IN (%s) AND ejaId NOT IN (%s);',sub,sub);
+  value=tibulaSqlIncludeList('SELECT ejaId FROM ejaUsers WHERE ejaOwner IN (%s) AND ejaId NOT IN (%s);',sub,sub);
   if ejaCheck(value) then 
    sub=value; 
    ownerTree=ownerTree..","..sub;   
@@ -82,7 +341,7 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  end 
  if ejaCheck(actionType) then order=" ORDER BY power"..actionType.. " ASC";  end
  if ejaCheck(tibula['ejaLinking']) then linking=" AND linking > 0 ";  end
- for k,v in pairs(ejaSqlMatrix("SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId From ejaModules WHERE name='ejaPermissions') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d)) %s ) %s %s;",moduleId,userId,extra,linking,order)) do
+ for k,v in pairs(tibulaSqlMatrix("SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId From ejaModules WHERE name='ejaPermissions') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d)) %s ) %s %s;",moduleId,userId,extra,linking,order)) do
   local commandName=v['name'];
   if ejaCheck(tibula['ejaAction'],"view") and ejaCheck(commandName,"save") then commandName=""; end
   if ejaCheck(commandName) then
@@ -113,9 +372,9 @@ function tibulaSqlModuleTree(ownerId,moduleId)	--return path, tree and links arr
 
  --path
  while id do
-  row=ejaSqlArray("SELECT ejaId,parentId,name FROM ejaModules WHERE ejaId=%d;",id);
+  row=tibulaSqlArray("SELECT ejaId,parentId,name FROM ejaModules WHERE ejaId=%d;",id);
   id=nil;
-  if ejaCheck(row) and ejaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",row['ejaId'],ownerId) then
+  if ejaCheck(row) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",row['ejaId'],ownerId) then
    table.insert(a['pathId'],row['ejaId'])
    table.insert(a['pathName'],row['name'])
    if ejaCheck(row['parentId']) then
@@ -124,15 +383,15 @@ function tibulaSqlModuleTree(ownerId,moduleId)	--return path, tree and links arr
   end
  end
  --tree 
- row=ejaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=%d ORDER BY power ASC;",moduleId);
+ row=tibulaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=%d ORDER BY power ASC;",moduleId);
  if not ejaCheck(row) then
   if not ejaCheck(a['pathId']) then
-   row=ejaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=0 OR parentId='' AND ejaId != %d ORDER BY power ASC;",moduleId);
+   row=tibulaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=0 OR parentId='' AND ejaId != %d ORDER BY power ASC;",moduleId);
   end
  end
  if ejaCheck(row) then
   for k,v in pairs(row) do
-   if ejaCheck(row) and ejaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['ejaId'],ownerId) then
+   if ejaCheck(row) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['ejaId'],ownerId) then
     if not ("#ejaFiles#ejaSql#ejaBackups#"):find(v['name']) then
      table.insert(a['treeId'],v['ejaId']);
      table.insert(a['treeName'],v['name']);
@@ -142,8 +401,8 @@ function tibulaSqlModuleTree(ownerId,moduleId)	--return path, tree and links arr
  end
  --links
  if ejaCheck(tibula['ejaId']) then
-  for k,v in pairs(ejaSqlMatrix('SELECT srcModuleId,(SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;',moduleId)) do 
-   if not ejaCheck(tibula['ejaLinkHistory']) or not ejaCheck(tibula['ejaLinkHistory'][v['srcModuleId']]) and ejaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['srcModuleId'],ownerId) then
+  for k,v in pairs(tibulaSqlMatrix('SELECT srcModuleId,(SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;',moduleId)) do 
+   if not ejaCheck(tibula['ejaLinkHistory']) or not ejaCheck(tibula['ejaLinkHistory'][v['srcModuleId']]) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['srcModuleId'],ownerId) then
     if v['srcModuleName'] ~= "ejaFiles" then
      table.insert(a['linkId'],v['srcModuleId']);
      table.insert(a['linkName'],v['srcModuleName']);
@@ -156,7 +415,7 @@ function tibulaSqlModuleTree(ownerId,moduleId)	--return path, tree and links arr
   for k,v in pairs (tibula['ejaLinkHistory']) do
    if not ejaCheck(k,moduleId) and ejaCheck(v) then	
     table.insert(a['historyId'],k);
-    table.insert(a['historyName'],tibulaTranslate(ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',k)));
+    table.insert(a['historyName'],tibulaTranslate(tibulaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',k)));
    end 
   end 
  end
@@ -172,13 +431,13 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
  
  if ejaCheck(actionType,"Matrix") then actionType="List"; matrix=1; end 
  
- for k,v in pairs (ejaSqlMatrix("SELECT * FROM ejaFields WHERE ejaModuleId=%d AND power%s>0 AND power%s!='' ORDER BY power%s ASC",moduleId,actionType,actionType,actionType)) do 
+ for k,v in pairs (tibulaSqlMatrix("SELECT * FROM ejaFields WHERE ejaModuleId=%d AND power%s>0 AND power%s!='' ORDER BY power%s ASC",moduleId,actionType,actionType,actionType)) do 
   if ejaCheck(tibula['ejaAction'],"view") then t="view"; else t=v['type']; end
   if ejaCheck(matrix,1) and ejaCheck(v['matrixUpdate']) then 
    t="matrix" 
   end
   if ejaCheck(v['ejaGroup']) and ejaCheck(tibula['ejaActionType'],"Edit") then
-   if not ejaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;",tibula['ejaOwner'],v['ejaGroup']) then
+   if not tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;",tibula['ejaOwner'],v['ejaGroup']) then
     t="view";
    end 
   end
@@ -189,8 +448,8 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
   if tibula.ejaValues and tibula['ejaValues'][rowName] then rowValue=tibula['ejaValues'][rowName]; end
   if ejaCheck(v['type'],"select") then rowArray=tibulaSelectToArray(v['value']); end
   if ejaCheck(v['type'],"sqlMatrix") then rowArray=tibulaSelectSqlToArray(v['value']); end
-  if ejaCheck(v['type'],"sqlValue") or ejaCheck(v['type'],"sqlHidden") then rowValue=ejaSqlRun(v['value']); end
-  if ejaCheck(v['type'],"sqlTable") then rowArray=ejaSqlMatrix(v['value']); end
+  if ejaCheck(v['type'],"sqlValue") or ejaCheck(v['type'],"sqlHidden") then rowValue=tibulaSqlRun(v['value']); end
+  if ejaCheck(v['type'],"sqlTable") then rowArray=tibulaSqlMatrix(v['value']); end
   if ejaCheck(rowType,"view") then 
    if ejaCheck(rowArray) then rowValue=rowArray[ tibula['ejaValues'][rowName] ]; end
    if ejaCheck(v['type'],"password") then rowValue="********"; end
@@ -213,7 +472,7 @@ function tibulaSqlSearchMatrix(query,moduleId) 	--return an associative array fo
   query=head[1]['query'];
  end
 
- local sql=ejaSqlMatrix(query);
+ local sql=tibulaSqlMatrix(query);
  
  if ejaCheck(sql) then
   for k,v in pairs(sql) do
@@ -225,7 +484,7 @@ function tibulaSqlSearchMatrix(query,moduleId) 	--return an associative array fo
  end
  tibula['ejaSqlCountTotal']=0;
  local x="";
- local moduleName=ejaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d',moduleId);
+ local moduleName=tibulaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d',moduleId);
  if ejaCheck(moduleName) then x=string.find(query,"FROM "..moduleName.." WHERE"); end
  if ejaCheck(x) then
   local queryCountFrom=string.sub(query,x,-1);
@@ -238,7 +497,7 @@ function tibulaSqlSearchMatrix(query,moduleId) 	--return an associative array fo
    end
    if ejaCheck(queryCountLimit) then 
     queryCount=string.sub(queryCount,1,queryCountLimit-string.len("ORDER BY"))
-    tibula['ejaSqlCountTotal']=ejaSqlRun(queryCount);
+    tibula['ejaSqlCountTotal']=tibulaSqlRun(queryCount);
    end
   end
  end
@@ -252,7 +511,7 @@ function tibulaSqlSearchHeader(query,moduleId) 	--return an associative array wi
  local head={};
 
  if ejaCheck(moduleId) then
-  for k,v in pairs(ejaSqlMatrix("SELECT * FROM ejaFields WHERE ejaModuleId='%s' AND powerList!='' AND powerList>0 ORDER BY powerList;",moduleId)) do
+  for k,v in pairs(tibulaSqlMatrix("SELECT * FROM ejaFields WHERE ejaModuleId='%s' AND powerList!='' AND powerList>0 ORDER BY powerList;",moduleId)) do
    head[v['name']]={}
    if ejaCheck(v['type'],"boolean") then 
     head[v['name']]['value']={}
@@ -312,7 +571,7 @@ function tibulaSelectSqlToArray(value)   --convert an sql query to bidimensional
  
  local queryName,queryValue=value:match('^%w+[ ]*(%w+),(%w+)')
  
- for k,v in pairs(ejaSqlMatrix(value)) do 
+ for k,v in pairs(tibulaSqlMatrix(value)) do 
   k1,v1=next(v);
   k2,v2=next(v,k1);
   if v1 and v2 then
@@ -354,3 +613,19 @@ function tibulaSelectToArray(value)      --convert a "|" separated list of "\n" 
  return a;                      
 end
 
+
+--deprecated functions
+function ejaSqlArray(query,...) return tibulaSqlArray(query,...); end
+function ejaSqlEscape(data) return tibulaSqlEscape(data); end
+function ejaSqlIncludeList(query,...) return tibulaSqlIncludeList(query,...); end
+function ejaSqlLastId() return tibulaSqlLastId(); end
+function ejaSqlMatrix(query,...) return tibulaSqlMatrix(query,...); end
+function ejaSqlNow() return tibulaSqlNow(); end
+function ejaSqlQuery(query,...) return tibulaSqlQuery(query,...); end
+function ejaSqlRun(query,...) return tibulaSqlRun(query,...); end
+function ejaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase) return tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase); end
+function ejaSqlStop() return tibulaSqlStop(); end
+function ejaSqlTableColumnCreate(tableName, columnName, columnType) return tibulaSqlTableColumnCreate(tableName, columnName, columnType); end
+function ejaSqlTableCreate(tableName) return tibulaSqlTableCreate(tableName); end
+function ejaSqlTableDataType(sType) return tibulaSqlTableDataType(sType); end
+function ejaSqlUnixTime(value) return tibulaSqlUnixTime(value); end

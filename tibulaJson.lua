@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2016 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Malagueña
 
@@ -145,7 +145,7 @@ function tibulaJsonTable(sqlArray,t) 	--return json table of results for t. t=0 
    if ejaString(v) == "ejaId" and t > 0 then 
     ax.ejaId=value 
     if t == 2 then
-     local sql=ejaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%s AND dstModuleId=%s AND dstFieldId=%s;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
+     local sql=tibulaSqlArray('SELECT ejaId,power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%s AND dstModuleId=%s AND dstFieldId=%s;',tibula['ejaModuleId'],value,tibula['ejaLinkModuleId'],tibula['ejaLinkFieldId']);
      if not ejaCheck(sql) then 
       sql={}
       sql['ejaId']=0; 
