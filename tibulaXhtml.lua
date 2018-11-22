@@ -23,6 +23,8 @@ end
 
 function tibulaXhtmlHeader() 	--return xhtml header and open form
  local r="";
+
+ local script=eja.opt.tibulaScript or "https://cdn.tibula.net/tibula.js"
  
  r=ejaSprintf('<!DOCTYPE html>');
  r=r..ejaSprintf('<html lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
@@ -30,7 +32,7 @@ function tibulaXhtmlHeader() 	--return xhtml header and open form
  r=r..ejaSprintf('<meta charset="utf-8">')
  r=r..ejaSprintf('<meta name="author" content="ubaldo@eja.it">')
  r=r..ejaSprintf('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
- r=r..ejaSprintf('<script type="text/javascript" src="http://cdn.tibula.net/tibula.js"></script>');
+ r=r..ejaSprintf('<script type="text/javascript" src="%s"></script>',script);
  r=r..ejaSprintf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
  r=r..ejaSprintf('</head>');
  r=r..ejaSprintf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula['ejaLanguage']);

@@ -4,7 +4,6 @@
 
 
 tibula={}
-tibulaCDN="http://cdn.tibula.net/"
 
 eja.mime["tibula"]="application/tibula"
 eja.mimeApp['application/tibula']='tibulaWeb'
@@ -14,10 +13,12 @@ eja.lib.tibulaStart='tibulaStart'
 eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
 eja.help.tibulaPath='tibula data path'
+eja.help.tibulaScript='javascript full url {https://cdn.tibula.net/tibula.js}'
+
 eja.opt.webSize=65536
 
-function tibulaStart() 
 
+function tibulaStart() 
  if ejaNumber(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.sqlDatabase);
  if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
