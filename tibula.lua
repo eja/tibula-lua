@@ -27,8 +27,6 @@ function tibulaStart()
  end
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.tibulaDatabase);
  if tibulaSqlStart(eja.opt.tibulaType,eja.opt.tibulaUsername,eja.opt.tibulaPassword,eja.opt.tibulaHostname,eja.opt.tibulaDatabase) then
-  tibulaTableStart();
-  ejaWebStart();
   if ejaNumber(eja.opt.tibulaCron) > 0 then
    if ejaFork()==0 then 
     ejaPidWrite('tibula.cron.'..eja.opt.webPort);
@@ -44,6 +42,8 @@ function tibulaStart()
     os.exit(); 
    end
   end 
+  tibulaTableStart();
+  ejaWebStart();
  end
 end
 
