@@ -14,16 +14,34 @@ eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
 eja.help.tibulaPath='tibula data path'
 eja.help.tibulaScript='javascript full url {https://cdn.tibula.net/tibula.js}'
+eja.help.tibulaCron='cron keep alive interval {0=off}'
 
 eja.opt.webSize=65536
 
 
 function tibulaStart() 
- if ejaNumber(eja.opt.tibulaStart) > 0 then eja.opt.webPort=eja.opt.tibulaStart end
+ if ejaNumber(eja.opt.tibulaStart) > 0 then 
+  eja.opt.webPort=eja.opt.tibulaStart 
+ else
+  eja.opt.webPort=eja.opt.webPort or 35248
+ end
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.sqlDatabase);
  if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
   tibulaTableStart();
   ejaWebStart();
+  if ejaNumber(eja.opt.tibulaCron) > 0 then
+   if ejaFork()==0 then 
+    ejaPidWrite('tibula.cron.'..eja.opt.webPort); 
+    while true do
+     ejaSleep(ejaNumber(eja.opt.tibulaCron))
+     local data=ejaWebGet("http://localhost:%s/.tibula",eja.opt.webPort)
+     if not data or #data < 1 then
+      break
+     end
+    end
+    os.exit(); 
+   end
+  end 
  end
 end
 
