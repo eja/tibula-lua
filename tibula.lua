@@ -25,17 +25,19 @@ function tibulaStart()
  else
   eja.opt.webPort=eja.opt.webPort or 35248
  end
- ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.sqlDatabase);
- if tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) then
+ ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.tibulaDatabase);
+ if tibulaSqlStart(eja.opt.tibulaType,eja.opt.tibulaUsername,eja.opt.tibulaPassword,eja.opt.tibulaHostname,eja.opt.tibulaDatabase) then
   tibulaTableStart();
   ejaWebStart();
   if ejaNumber(eja.opt.tibulaCron) > 0 then
    if ejaFork()==0 then 
-    ejaPidWrite('tibula.cron.'..eja.opt.webPort); 
+    ejaPidWrite('tibula.cron.'..eja.opt.webPort);
+    ejaInfo('[tibula] cron job start with %s sec. interval',eja.opt.tibulaCron);
     while true do
      ejaSleep(ejaNumber(eja.opt.tibulaCron))
      local data=ejaWebGet("http://localhost:%s/.tibula",eja.opt.webPort)
      if not data or #data < 1 then
+      ejaWarn('[tibula] cron job stop')
       break
      end
     end
