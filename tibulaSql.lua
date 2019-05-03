@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Prelude Op. 23 No. 5
 
@@ -281,7 +281,17 @@ end
 
 
 function tibulaSqlQuery(query,...)	--filter sql query 
- query=ejaSprintf(query,...); 
+ argIn=table.pack(...)
+ argOut={}
+ for k,v in next,argIn do
+  if tonumber(k) then
+   str=tostring(v)
+   str=str:gsub("'","''")  
+   str=str:gsub("%%","%%%%")   
+   argOut[k]=str
+  end
+ end
+ query=string.format(query,table.unpack(argOut))
  
  if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
   query=string.gsub(query,"@ejaOwner",tibula['ejaOwner']);
