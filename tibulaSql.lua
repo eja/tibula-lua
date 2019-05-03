@@ -340,6 +340,7 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  local extra=""; 
  local order=""; 
  local linking="";
+ local query="";
  
  if ejaCheck(tibula['ejaModuleName'],"ejaLogin") then table.insert(r,"login"); end
  if ejaCheck(tibula['ejaModuleId'],35248) then table.insert(r,"logout"); end
@@ -351,7 +352,8 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  end 
  if ejaCheck(actionType) then order=" ORDER BY power"..actionType.. " ASC";  end
  if ejaCheck(tibula['ejaLinking']) then linking=" AND linking > 0 ";  end
- for k,v in pairs(tibulaSqlMatrix("SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId From ejaModules WHERE name='ejaPermissions') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d)) %s ) %s %s;",moduleId,userId,extra,linking,order)) do
+ query=ejaSprintf("SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId From ejaModules WHERE name='ejaPermissions') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d)) %s ) %s %s;",moduleId,userId,extra,linking,order)
+ for k,v in pairs(tibulaSqlMatrix(query)) do
   local commandName=v['name'];
   if ejaCheck(tibula['ejaAction'],"view") and ejaCheck(commandName,"save") then commandName=""; end
   if ejaCheck(commandName) then
