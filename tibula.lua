@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Suite española, Op. 47 
 
@@ -9,9 +9,11 @@ eja.mime["tibula"]="application/tibula"
 eja.mimeApp['application/tibula']='tibulaWeb'
 eja.lib.tibulaStop='tibulaStop'
 eja.lib.tibulaStart='tibulaStart'
+eja.lib.tibulaInstall='tibulaInstall'
 
 eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
+eja.help.tibulaInstall='create db/user and install demo version'
 eja.help.tibulaPath='tibula data path'
 eja.help.tibulaScript='javascript full url {https://cdn.tibula.net/tibula.js}'
 eja.help.tibulaCron='cron keep alive interval {0=off}'
@@ -105,3 +107,33 @@ function tibulaWeb(web)
  return web
 end
 
+
+function tibulaInstall()
+ local type=eja.opt.tibulaType or "maria"
+ local installUsername=eja.opt.tibulaInstallUsername
+ local installPassword=eja.opt.tibulaInstallPassword
+ local user=eja.opt.tibulaUsername
+ local pass=eja.opt.tibulaPassword
+ local host=eja.opt.tibulaHostname or 'localhost'
+ local db=eja.opt.tibulaDatabase
+ if user and pass and host and db then
+  local sqlTmpFile=eja.pathTmp..'/tibula.install.sql'
+  if ejaFileStat(sqlTmpFile) then ejaFileRemove(sqlTmpFile) end
+  ejaFileWrite(sqlTmpFile,ejaSprintf([[
+   CREATE DATABASE %s;
+   CREATE USER '%s'@'%s' IDENTIFIED BY '%s';
+   GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s' WITH GRANT OPTION;
+   FLUSH PRIVILEGES;
+   USE %s;
+  ]],db,user,host,pass,db,user,host,db))
+  ejaExecute('wget -qO - "http://github.com/ubaldus/tibula/raw/master/tibula.sql" >> %s',sqlTmpFile)
+  if installUsername and installPassword then
+   ejaExecute('mysql -u %s -p%s < %s',installUsername,installPassword,sqlTmpFile)
+  else
+   ejaExecute('sudo mysql < "%s"',sqlTmpFile)   
+  end
+  ejaFileRemove(sqlTmpFile)
+ else
+  ejaError('[tibula] username, password and database name are mandatory.')
+ end
+end
