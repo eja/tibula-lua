@@ -133,7 +133,22 @@ function tibulaInstall()
    ejaExecute('sudo mysql < "%s"',sqlTmpFile)   
   end
   ejaFileRemove(sqlTmpFile)
+  if tibulaSqlStart('maria',user,pass,'localhost',db) then
+   ejaInfo('[tibula] database ready')
+   if not ejaFileStat(eja.pathEtc..'/eja.init') then ejaSetup() end
+   if ejaFileAppend(eja.pathEtc..'/eja.init',ejaSprintf([[
+    --tibula setup
+    eja.opt.tibulaUsername="%s"
+    eja.opt.tibulaPassword="%s"
+    eja.opt.tibulaDatabase="%s"
+    eja.opt.tibulaCron=300
+   ]],user,pass,db)) then
+    ejaWarn('[tibula] eja.init updated, please check')
+   end
+  else
+   ejaError('[tibula] database connection error')   
+  end
  else
-  ejaError('[tibula] username, password and database name are mandatory.')
+  ejaError('[tibula] username, password and database name are mandatory')
  end
 end
