@@ -109,14 +109,15 @@ end
 
 
 function tibulaInstall()
+ ejaUpdate()
  local type=eja.opt.tibulaType or "maria"
- local installUsername=eja.opt.tibulaInstallUsername
- local installPassword=eja.opt.tibulaInstallPassword
- local user=eja.opt.tibulaUsername
- local pass=eja.opt.tibulaPassword
+ local user=eja.opt.tibulaUsername or ejaReadLine("tibula db username: ")
+ local pass=eja.opt.tibulaPassword or ejaReadLine("tibula db password: ")
  local host=eja.opt.tibulaHostname or 'localhost'
- local db=eja.opt.tibulaDatabase
- if user and pass and host and db then
+ local db=eja.opt.tibulaDatabase or ejaReadLine("tibula db name: ")
+ local installUsername=eja.opt.tibulaInstallUsername or ejaReadLine("local db username: ")
+ local installPassword=eja.opt.tibulaInstallPassword or ejaReadLine("local db password: ")
+ if user ~= "" and pass ~= "" and db ~= "" then
   local sqlTmpFile=eja.pathTmp..'/tibula.install.sql'
   if ejaFileStat(sqlTmpFile) then ejaFileRemove(sqlTmpFile) end
   ejaFileWrite(sqlTmpFile,ejaSprintf([[
@@ -127,7 +128,7 @@ function tibulaInstall()
    USE %s;
   ]],db,user,host,pass,db,user,host,db))
   ejaExecute('wget -qO - "http://github.com/ubaldus/tibula/raw/master/tibula.sql" >> %s',sqlTmpFile)
-  if installUsername and installPassword then
+  if installUsername ~= "" and installPassword ~= "" then
    ejaExecute('mysql -u %s -p%s < %s',installUsername,installPassword,sqlTmpFile)
   else
    ejaExecute('mysql < "%s"',sqlTmpFile)   
@@ -146,7 +147,7 @@ function tibulaInstall()
     ejaWarn('[tibula] eja.init updated, please check')
    end
   else
-   ejaError('[tibula] database connection error')   
+   ejaError('[tibula] database installation error')   
   end
  else
   ejaError('[tibula] username, password and database name are mandatory')
