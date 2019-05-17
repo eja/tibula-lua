@@ -130,7 +130,7 @@ function tibulaInstall()
   if installUsername and installPassword then
    ejaExecute('mysql -u %s -p%s < %s',installUsername,installPassword,sqlTmpFile)
   else
-   ejaExecute('sudo mysql < "%s"',sqlTmpFile)   
+   ejaExecute('mysql < "%s"',sqlTmpFile)   
   end
   ejaFileRemove(sqlTmpFile)
   if tibulaSqlStart('maria',user,pass,'localhost',db) then
