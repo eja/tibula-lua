@@ -266,15 +266,15 @@ function tibulaSqlTableDataType(sType)	--return sql data type syntax for sType d
  if sType=="datetime" 		then dType="DATETIME"; 			end
  if sType=="datetimeRange"	then dType="DATETIME"; 			end
  if sType=="text" 		then dType="TEXT";	 		end
- if sType=="hidden"	 	then dType="CHAR(255)"; 		end
- if sType=="view" 		then dType="CHAR(255)"; 		end
- if sType=="file" 		then dType="CHAR(255)"; 		end
+ if sType=="hidden"	 	then dType="TEXT"; 			end
+ if sType=="view" 		then dType="TEXT"; 			end
+ if sType=="file" 		then dType="TEXT"; 			end
  if sType=="select" 		then dType="TEXT"; 			end
  if sType=="sqlValue" 		then dType="TEXT"; 			end
  if sType=="sqlHidden" 		then dType="TEXT"; 			end
  if sType=="sqlMatrix" 		then dType="TEXT"; 			end
- if sType=="textArea" 		then dType="MEDIUMTEXT"; 		end
- if sType=="htmlArea"		then dType="MEDIUMTEXT"; 		end
+ if sType=="textArea" 		then dType="TEXT"; 			end
+ if sType=="htmlArea"		then dType="TEXT";	 		end
 
  return dType;
 end
