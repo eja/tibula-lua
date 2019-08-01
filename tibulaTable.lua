@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Polonaise héroïque
 
@@ -34,7 +34,10 @@ function tibulaTableImport(a)	--import data into eja table
   if ejaCheck(key,"ejaModuleChange") then tibula['ejaModuleChange']=value; end
   if ejaCheck(key,"ejaModuleLinkBack") then tibula['ejaModuleLinkBack']=value; end
   if ejaCheck(key,"ejaDirectory") and not string.find(value,"%.%.") then tibula['ejaDirectory']=value; end
-  if ejaCheck(key,"ejaOut") then tibula['ejaOut']=value; end	--xhtml/xml/json
+  if ejaCheck(key,"ejaOut") then --xhtml/xml/json
+   tibula['ejaOut']=value; 
+   if ejaString(value) == "json" then tibula['ejaOutSession']=0; end
+  end
   if ejaCheck(key,"ejaOutSession") then tibula['ejaOutSession']=value; end
    
   if string.sub(key,1,10) == "ejaAction[" then tibula['ejaAction']=string.sub(string.match(key,"%[%w+%]"),2,-2); end
@@ -95,7 +98,9 @@ function tibulaTableImport(a)	--import data into eja table
    end
   end
   if ejaCheck(key,"ejaValues") and type(value) == 'table' then tibula['ejaValues']=value; end
-
+  if ejaNumber(tibula.ejaId) == 0 and tibula.ejaValues and tibula.ejaValues.ejaId then
+   tibula.ejaId=tibula.ejaValues.ejaId
+  end
 
  end 
 end
@@ -295,7 +300,7 @@ function tibulaTableRun(web)	--main tibula engine
 
    --save and copy (must be after "new" for "copy" to work). update data also if ejaAction=new and we are in batch mode (xml) 
    if ejaCheck(tibula['ejaValues']) and ( ( ejaCheck(tibula['ejaAction'],"save") or ejaCheck(tibula['ejaAction'],"copy") ) or ( ejaCheck(tibula['ejaOutSession'],0) and ejaCheck(tibula['ejaAction'],"new") ) or ( ejaCheck(tibula['ejaAction'],"searchLink") and ejaCheck(tibula['ejaId']) ) ) then
-    if ejaCheck(tibula['ejaModuleName'],"ejaModules") and ejaCheck(tibula['ejaAction'],"save") then	-- create table on database and add permissions
+    if ejaCheck(tibula['ejaModuleName'],"ejaModules") and (ejaCheck(tibula['ejaAction'],"save") or (ejaCheck(tibula['ejaOutSession'],0) and ejaCheck(tibula['ejaAction'],"new"))) then	-- create table on database and add permissions
      if ejaCheck(tibula['ejaValues']['sqlCreated']) then
       local tableCreate=tibulaSqlTableCreate(tibula['ejaValues']['name']);  
       if ejaNumber(tableCreate) > 0 then tibulaInfo("ejaSqlModuleCreated"); end
