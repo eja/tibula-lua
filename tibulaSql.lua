@@ -178,7 +178,7 @@ function tibulaSqlTableCreate(tableName)	--create a new table if it does not exi
   local extra="";
   if tibulaSqlType == "maria" then extra=" AUTO_INCREMENT "; end  
   if tibulaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end  
-  if tibulaSqlRun('CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
+  if tibulaSqlRun('CREATE TABLE %s (ejaId BINGINT UNSIGNED %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
    r=1;
   else 
    r=-1;

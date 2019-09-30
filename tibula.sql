@@ -1,6 +1,6 @@
 BEGIN;
 CREATE TABLE ejaCommands (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   name varchar(32) default NULL,
@@ -10,7 +10,7 @@ CREATE TABLE ejaCommands (
   defaultCommand integer default 0,
   linking integer default 0
 );
-ALTER TABLE ejaCommands CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaCommands CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaCommands VALUES(1,1,'0000-00-00 00:00:00','login',1,1,1,0,0);
 INSERT INTO ejaCommands VALUES(2,1,'0000-00-00 00:00:00','logout',50,50,50,1,0);
 INSERT INTO ejaCommands VALUES(3,1,'0000-00-00 00:00:00','new',2,2,0,1,1);
@@ -37,7 +37,7 @@ INSERT INTO ejaCommands VALUES(34,1,'2008-03-03 16:35:27','runEdit',0,0,2,0,0);
 INSERT INTO ejaCommands VALUES(35,1,'2008-05-08 12:06:41','fileZip',0,7,0,0,1);
 INSERT INTO ejaCommands VALUES(36,1,'2008-05-08 12:07:05','fileUnzip',0,7,0,0,1);
 CREATE TABLE ejaFields (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   ejaModuleId integer default 0,
@@ -51,7 +51,7 @@ CREATE TABLE ejaFields (
   ejaGroup text,
   matrixUpdate integer default 0
 );
-ALTER TABLE ejaFields CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaFields CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaFields VALUES(1,1,'0000-00-00 00:00:00',6,'name','text','',1,1,1,0,'',0);
 INSERT INTO ejaFields VALUES(2,1,'0000-00-00 00:00:00',6,'type','select','boolean
 date
@@ -149,7 +149,7 @@ INSERT INTO ejaFields VALUES(259,1,'2010-01-07 15:51:05',19,'ejaFile','file','',
 INSERT INTO ejaFields VALUES(260,1,'2010-01-14 14:56:29',19,'ejaOwner','sqlMatrix','SELECT ejaId,username FROM ejaUsers WHERE (ejaId=@ejaOwner OR ejaOwner IN (SELECT value FROM ejaSessions WHERE name=''ejaOwners'' AND ejaOwner=@ejaOwner)) ORDER BY username;',1,1,1,0,'',0);
 INSERT INTO ejaFields VALUES(261,1,'2010-01-14 16:26:59',21,'ejaLog','datetimeRange','',10,10,10,0,'',0);
 CREATE TABLE ejaFiles (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   fileName char(255) default NULL,
@@ -157,17 +157,17 @@ CREATE TABLE ejaFiles (
   ejaModuleId integer default 0
 , fileSize INTEGER, ejaFieldId INTEGER, filePath TEXT, ejaDirectory CHAR(255), ejaFile CHAR(255)
 );
-ALTER TABLE ejaFiles CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaFiles CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaGroups (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   name varchar(255) default NULL,
   note mediumtext
 );
-ALTER TABLE ejaGroups CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaGroups CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaHelps (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   ejaModuleId text,
@@ -175,30 +175,30 @@ CREATE TABLE ejaHelps (
   ejaLanguage text,
   text mediumtext
 );
-ALTER TABLE ejaHelps CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaHelps CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaLanguages (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   nameFull varchar(255) default NULL,
   name varchar(255) default NULL,
   note mediumtext
 );
-ALTER TABLE ejaLanguages CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaLanguages CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaLanguages VALUES(1,1,'2007-09-07 13:01:05','italiano','it','');
 INSERT INTO ejaLanguages VALUES(2,1,'2007-09-07 13:01:29','english','en','');
 INSERT INTO ejaLanguages VALUES(3,1,'2008-03-04 15:48:52','deutsch','de','');
 CREATE TABLE ejaLinks (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
-  srcModuleId integer default 0,
-  srcFieldId integer default 0,
-  dstModuleId integer default 0,
-  dstFieldId integer default 0,
+  srcModuleId BIGINT default 0,
+  srcFieldId BIGINT default 0,
+  dstModuleId BIGINT default 0,
+  dstFieldId BIGINT default 0,
   power integer default 0
 );
-ALTER TABLE ejaLinks CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaLinks CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaLinks VALUES(69,1,'2007-09-02 17:30:24',16,119,15,1,1);
 INSERT INTO ejaLinks VALUES(70,1,'2007-09-02 17:30:24',16,118,15,1,1);
 INSERT INTO ejaLinks VALUES(71,1,'2007-09-02 17:30:24',16,117,15,1,1);
@@ -353,7 +353,7 @@ INSERT INTO ejaLinks VALUES(1116,1,'2010-01-07 15:49:37',16,577,15,1,1);
 INSERT INTO ejaLinks VALUES(1117,1,'2010-01-07 15:49:37',16,576,15,1,1);
 INSERT INTO ejaLinks VALUES(1118,1,'2010-01-14 14:58:42',16,122,15,13,1);
 CREATE TABLE ejaModuleLinks (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   dstModuleId integer default 0,
@@ -361,13 +361,13 @@ CREATE TABLE ejaModuleLinks (
   power integer default 0,
   srcFieldName char(255) default NULL
 );
-ALTER TABLE ejaModuleLinks CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaModuleLinks CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaModuleLinks VALUES(1,1,'2007-10-02 09:29:23',15,19,1,'');
 INSERT INTO ejaModuleLinks VALUES(2,1,'2007-10-02 09:29:46',15,16,2,'');
 INSERT INTO ejaModuleLinks VALUES(3,1,'2007-10-02 09:29:54',15,14,3,'');
 INSERT INTO ejaModuleLinks VALUES(5,1,'2007-10-02 16:48:19',14,5,1,'');
 CREATE TABLE ejaModules (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   parentId integer default 0,
@@ -377,7 +377,7 @@ CREATE TABLE ejaModules (
   searchLimit integer default 0, 
   sortList TEXT, lua MEDIUMTEXT
 );
-ALTER TABLE ejaModules CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaModules CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaModules VALUES(1,1,'0000-00-00 00:00:00',35,'ejaLogin',1,1,0,NULL,NULL);
 INSERT INTO ejaModules VALUES(2,1,'2001-06-22 12:00:00',0,'eja',1,0,0,NULL,NULL);
 INSERT INTO ejaModules VALUES(5,1,'0000-00-00 00:00:00',25,'ejaModules',1,1,0,'name','');
@@ -399,13 +399,13 @@ INSERT INTO ejaModules VALUES(34,1,'2007-10-02 09:19:31',25,'ejaModuleLinks',5,1
 INSERT INTO ejaModules VALUES(35,1,'2007-10-02 17:00:20',2,'ejaSystem',3,0,0,NULL,NULL);
 INSERT INTO ejaModules VALUES(36,1,'2007-10-24 18:41:44',35,'ejaBackups',10,0,0,NULL,NULL);
 CREATE TABLE ejaPermissions (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   ejaModuleId integer default 0,
   ejaCommandId integer default 0
 );
-ALTER TABLE ejaPermissions CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaPermissions CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaPermissions VALUES(21,1,'2007-09-02 16:23:36',18,3);
 INSERT INTO ejaPermissions VALUES(22,1,'2007-09-02 16:23:48',18,4);
 INSERT INTO ejaPermissions VALUES(23,1,'2007-09-02 16:23:52',18,5);
@@ -559,23 +559,23 @@ INSERT INTO ejaPermissions VALUES(582,1,'2010-01-07 15:47:58',19,8);
 INSERT INTO ejaPermissions VALUES(583,1,'2010-01-07 15:48:03',19,11);
 INSERT INTO ejaPermissions VALUES(584,1,'2010-01-07 15:48:24',19,6);
 CREATE TABLE ejaSessions (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   name varchar(255) default NULL,
   value mediumtext,
   sub varchar(255) default NULL
 );
-ALTER TABLE ejaSessions CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaSessions CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaSql (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   query mediumtext
 );
-ALTER TABLE ejaSql CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaSql CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaUsers (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   ejaSession varchar(64) default NULL,
@@ -584,7 +584,7 @@ CREATE TABLE ejaUsers (
   defaultModuleId integer default 0,
   ejaLanguage text
 );
-ALTER TABLE ejaUsers CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaUsers CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaUsers VALUES(1,1,'0000-00-00 00:00:00','','admin','eja.it',5,'en');
 INSERT INTO ejaUsers VALUES(13,1,'2010-01-14 14:55:24','','user','eja.it',2,'en');
 CREATE TABLE ejaLogin (
@@ -594,9 +594,9 @@ CREATE TABLE ejaLogin (
   username CHAR(255), 
   password CHAR(255)
 );
-ALTER TABLE ejaLogin CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaLogin CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 CREATE TABLE ejaTranslations (
-  ejaId integer NOT NULL primary key,
+  ejaId BIGINT NOT NULL primary key,
   ejaOwner integer default 0,
   ejaLog datetime default NULL,
   ejaLanguage char(3) default NULL,
@@ -604,7 +604,7 @@ CREATE TABLE ejaTranslations (
   word text,
   translation text
 );
-ALTER TABLE ejaTranslations CHANGE ejaId ejaId integer AUTO_INCREMENT;
+ALTER TABLE ejaTranslations CHANGE ejaId ejaId BIGINT AUTO_INCREMENT;
 INSERT INTO ejaTranslations VALUES(10,1,'2007-09-10 18:20:27','it',0,'ejaSystem','Sistema');
 INSERT INTO ejaTranslations VALUES(11,1,'2007-09-10 18:21:14','it',0,'ejaTools','Strumenti');
 INSERT INTO ejaTranslations VALUES(12,1,'2007-09-10 18:22:00','it',0,'ejaHelps','Aiuto');
