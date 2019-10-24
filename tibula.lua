@@ -21,7 +21,16 @@ eja.help.tibulaCron='cron keep alive interval {0=off}'
 eja.opt.webSize=65536
 
 
+function tibulaCheck()
+ if ejaNumber(eja.version) == 0 or ejaNumber(eja.version) < 12.1024 then
+  ejaError('[tibula] eja version too old, please update eja first.')
+  os.exit()
+ end
+end
+
+
 function tibulaStart() 
+ tibulaCheck()
  if ejaNumber(eja.opt.tibulaStart) > 0 then 
   eja.opt.webPort=eja.opt.tibulaStart 
  else
@@ -58,6 +67,7 @@ end
 
 
 function tibulaWeb(web) 
+ tibulaCheck()
  tibulaTableStart()
 
  if not tibulaSqlConnection or not tibulaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 

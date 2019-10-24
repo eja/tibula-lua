@@ -178,7 +178,7 @@ function tibulaSqlTableCreate(tableName)	--create a new table if it does not exi
   local extra="";
   if tibulaSqlType == "maria" then extra=" AUTO_INCREMENT "; end  
   if tibulaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end  
-  if tibulaSqlRun('CREATE TABLE %s (ejaId BINGINT UNSIGNED %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
+  if tibulaSqlRun('CREATE TABLE %s (ejaId BIGINT %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
    r=1;
   else 
    r=-1;
@@ -371,63 +371,61 @@ end
 
 function tibulaSqlModuleTree(ownerId,moduleId)	--return path, tree and links array
  local row;
- local a={}
  local id=moduleId;
- a['pathId']={}
- a['pathName']={}
- a['treeId']={}
- a['treeName']={} 
- a['linkId']={}
- a['linkName']={}
- a['historyId']={}
- a['historyName']={}
+ local a={}
+ a.pathId={}
+ a.pathName={}
+ a.treeId={}
+ a.treeName={} 
+ a.linkId={}
+ a.linkName={}
+ a.historyId={}
+ a.historyName={}
 
  --path
  while id do
   row=tibulaSqlArray("SELECT ejaId,parentId,name FROM ejaModules WHERE ejaId=%d;",id);
   id=nil;
-  if ejaCheck(row) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",row['ejaId'],ownerId) then
-   table.insert(a['pathId'],row['ejaId'])
-   table.insert(a['pathName'],row['name'])
-   if ejaCheck(row['parentId']) then
-    id = row['parentId']
+  if ejaTableCount(row) > 0 and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",row.ejaId,ownerId) then
+   table.insert(a.pathId,row.ejaId)
+   table.insert(a.pathName,row.name)
+   if ejaNumber(row.parentId) > 0 then
+    id = row.parentId
    end
   end
  end
  --tree 
  row=tibulaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=%d ORDER BY power ASC;",moduleId);
- if not ejaCheck(row) then
-  if not ejaCheck(a['pathId']) then
+ if ejaTableCount(row) == 0 then
+  if ejaTableCount(a.pathId) == 0 then
    row=tibulaSqlMatrix("SELECT ejaId,name FROM ejaModules WHERE parentId=0 OR parentId='' AND ejaId != %d ORDER BY power ASC;",moduleId);
   end
  end
- if ejaCheck(row) then
-  for k,v in pairs(row) do
-   if ejaCheck(row) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['ejaId'],ownerId) then
-    if not ("#ejaFiles#ejaSql#ejaBackups#"):find(v['name']) then
-     table.insert(a['treeId'],v['ejaId']);
-     table.insert(a['treeName'],v['name']);
-    end
+ if ejaTableCount(row) > 0 then
+  for k,v in next,row do
+   if tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v.ejaId,ownerId) then
+    table.insert(a.treeId,v.ejaId);
+    table.insert(a.treeName,v.name);
    end
   end
  end
  --links
- if ejaCheck(tibula['ejaId']) then
-  for k,v in pairs(tibulaSqlMatrix('SELECT srcModuleId,(SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;',moduleId)) do 
-   if not ejaCheck(tibula['ejaLinkHistory']) or not ejaCheck(tibula['ejaLinkHistory'][v['srcModuleId']]) and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v['srcModuleId'],ownerId) then
-    if v['srcModuleName'] ~= "ejaFiles" then
-     table.insert(a['linkId'],v['srcModuleId']);
-     table.insert(a['linkName'],v['srcModuleName']);
+ if ejaNumber(tibula.ejaId) > 0 then
+  for k,v in next,tibulaSqlMatrix('SELECT srcModuleId,(SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;',moduleId) do 
+   if (ejaTableCount(tibula.ejaLinkHistory) == 0 or ejaString(tibula.ejaLinkHistory[v.srcModuleId]) == "") and tibulaSqlRun("SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;",v.srcModuleId,ownerId) then
+    if v.srcModuleName ~= "ejaFiles" then
+     table.insert(a.linkId,v.srcModuleId);
+     table.insert(a.linkName,v.srcModuleName);
     end
    end
   end
  end
  
- if ejaCheck(tibula['ejaLinkHistory']) then
-  for k,v in pairs (tibula['ejaLinkHistory']) do
-   if not ejaCheck(k,moduleId) and ejaCheck(v) then	
-    table.insert(a['historyId'],k);
-    table.insert(a['historyName'],tibulaTranslate(tibulaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',k)));
+ if ejaTableCount(tibula.ejaLinkHistory) > 0 then
+  for k,v in next,tibula.ejaLinkHistory do
+   if ejaString(k) ~= ejaString(moduleId) and ejaString(v) ~= "" then	
+    table.insert(a.historyId,k);
+    table.insert(a.historyName,tibulaTranslate(tibulaSqlRun('SELECT name FROM ejaModules WHERE ejaId=%d;',k)));
    end 
   end 
  end
