@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Nocturne no.20
 
@@ -94,17 +94,18 @@ end
 
 function tibulaInfo(value) 	--append value to the info box for alert, info and error messages and return the new infos
 
- if not tibula['ejaInfo'] then tibula['ejaInfo'] = "" end
-
- if value then
-  value=tibulaTranslate(value);
-  if ejaString(value) ~= "" then
-   if ejaString(tibula['ejaInfo']) ~= "" then tibula['ejaInfo']=tibula['ejaInfo'].." &nbsp; ";  end
-   tibula['ejaInfo']=tibula['ejaInfo']..ejaString(value):gsub("^%s*(.-)%s*$", "%1")
+ if ejaString(value) ~= "" then
+  translation=tibulaTranslate(value)
+  if translation  and translation ~= value then
+   if not translation:match("^%s*$") then
+    tibula.ejaInfo=ejaSprintf('%s%s\n',ejaString(tibula.ejaInfo),translation)
+   end
+  else
+   ejaTrace('[tibula] missing translation: %s %s',tibula.ejaLanguage,value)
   end
- end 
-
- return tibula['ejaInfo']
+ end
+ 
+ return ejaString(tibula.ejaInfo)
 end
 
 

@@ -185,7 +185,7 @@ function tibulaTableRun(web)	--main tibula engine
    table.insert(tibula.ejaCommandsArray,"searchLink");
   end
   --linking back
-  if ejaNumber(tibula.ejaModuleLinkBack) > 0 then	--link back
+  if ejaNumber(tibula.ejaModuleLinkBack) > 0 and ejaTableCount(tibula.ejaLinkHistory) > 0 then	--link back
    tibulaReset();
    tibula.ejaId=ejaNumber(tibula.ejaLinkHistory[tibula.ejaModuleLinkBack]);
    tibula.ejaModuleId=tibula.ejaModuleLinkBack;
@@ -382,7 +382,7 @@ function tibulaTableRun(web)	--main tibula engine
        if ejaString(v) ~= "" and not string.find(k,"%.") then 
         local sqlAnd="";
         v=string.gsub(v,"*","%%");
-        v=string.gsub(v,"%%","%%%%");
+        v=string.gsub(v,"%%","%%%%%%%%");
         if sqlTypeThis == "boolean" or sqlTypeThis == "integer" then 
          sqlAnd=ejaSprintf(' AND %s = %d ',k,v); 
         end
@@ -393,7 +393,7 @@ function tibulaTableRun(web)	--main tibula engine
          if ejaString(tibula.ejaValues[k..".begin"]) ~= "" then sqlAnd=sqlAnd..ejaSprintf(" AND %s > '%s' ",k,tibulaDateSet(tibula.ejaValues[k..".begin"],"")); end
          if ejaString(tibula.ejaValues[k..".end"]) ~= "" then sqlAnd=sqlAnd..ejaSprintf(" AND %s < '%s' ",k,tibulaDateSet(tibula.ejaValues[k..".end"],"")); end
         end
-        if ejaString(sqlAnd) == "" then sqlAnd=ejaSprintf(" AND %s LIKE '%s'",k,v); end
+        if ejaString(sqlAnd) == "" then sqlAnd=" AND "..k.." LIKE '"..v.."'"; end
         sql=sql..sqlAnd;
        end
       end
@@ -433,6 +433,7 @@ function tibulaTableRun(web)	--main tibula engine
 
  --Define ejaActionType and populate fields/result matrix
  if ejaString(tibula.ejaActionType) == "List" then 
+print(tibula.ejaSqlQuery)
   tibula.ejaSearchList=tibulaSqlSearchMatrix(tibula.ejaSqlQuery,tibula.ejaModuleId); 
  else
    if ejaNumber(tibula.ejaId) > 0 then 
