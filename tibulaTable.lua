@@ -433,7 +433,6 @@ function tibulaTableRun(web)	--main tibula engine
 
  --Define ejaActionType and populate fields/result matrix
  if ejaString(tibula.ejaActionType) == "List" then 
-print(tibula.ejaSqlQuery)
   tibula.ejaSearchList=tibulaSqlSearchMatrix(tibula.ejaSqlQuery,tibula.ejaModuleId); 
  else
    if ejaNumber(tibula.ejaId) > 0 then 
