@@ -50,7 +50,7 @@ function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)
    tibulaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase);
    if tibulaSqlConnection then
     tibulaSqlRun("PRAGMA journal_mode = MEMORY;");
-    if sqlPassword ~= "" then tibulaSqlRun("PRAGMA key = '%s';",sqlPassword); end
+    if ejaString(sqlPassword) ~= "" then tibulaSqlRun("PRAGMA key = '%s';",sqlPassword); end
     tibulaSqlRun("PRAGMA temp_store = MEMORY;");
    end
   end
