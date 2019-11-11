@@ -25,7 +25,7 @@ function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)
  
  if sqlType == "maria" and eja.maria then
   eja.sql=ejaMaria();
- elseif ejaFileStat(eja.pathLib..'luasql/'..sqlType..'.so') then 
+ elseif ejaModuleCheck('luasql.'..sqlType) then 
   if sqlType == "sqlite3" then eja.sql=require "luasql.sqlite3" end
   if sqlType == "mysql" then eja.sql=require "luasql.mysql" end
  else
