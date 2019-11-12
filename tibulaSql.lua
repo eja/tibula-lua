@@ -178,7 +178,7 @@ function tibulaSqlTableCreate(tableName)	--create a new table if it does not exi
   local extra="";
   if tibulaSqlType == "maria" then extra=" AUTO_INCREMENT "; end  
   if tibulaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end  
-  if tibulaSqlRun('CREATE TABLE %s (ejaId BIGINT %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
+  if tibulaSqlRun('CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);',tableName,extra) then
    r=1;
   else 
    r=-1;
@@ -622,6 +622,22 @@ function tibulaSelectToArray(value)      --convert a "|" separated list of "\n" 
  
  return a;                      
 end
+
+
+function tibulaModuleExport(name)   --export a tibula module with fields and commands
+ local a={}
+ local id=tibulaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",name)
+ a.name=name
+ a.module=tibulaSqlArray("SELECT a.searchLimit,a.sqlCreated,a.power,a.sortList,a.lua,(SELECT x.name FROM ejaModules AS x WHERE x.ejaId=a.parentId) AS parentName FROM ejaModules AS a WHERE ejaId=%s;",id)
+ a.field=tibulaSqlMatrix("SELECT translate,matrixUpdate,powerEdit,name,type,powerList,powerSearch,value FROM ejaFields WHERE ejaModuleId=%s;",id)
+ a.command={}
+ for _,row in next,tibulaSqlMatrix([[SELECT name from ejaCommands WHERE ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%s);]],id) do
+  a.command[#a.command+1]=row.name
+ end
+ return a
+end
+
+
 
 
 --deprecated functions
