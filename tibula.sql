@@ -706,7 +706,7 @@ ALTER TABLE ejaUsers CHANGE ejaId ejaId INTEGER AUTO_INCREMENT;
 
 
 /* BIG INT UNSIGNED */
-
+/* todo
 ALTER TABLE ejaCommands CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
 ALTER TABLE ejaCommands CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
 ALTER TABLE ejaFields CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
@@ -743,7 +743,7 @@ ALTER TABLE ejaTranslations CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
 ALTER TABLE ejaUsers CHANGE defaultModuleId defaultModuleId BIGINT UNSIGNED;
 ALTER TABLE ejaUsers CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
 ALTER TABLE ejaUsers CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-
+*/
 
 /* change password update */
 INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:03',2,'passwordOld','password','',10,0,0,0,'',0);
