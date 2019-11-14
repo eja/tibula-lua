@@ -123,6 +123,10 @@ INSERT INTO ejaFields VALUES(248,1,'2010-01-07 12:00:13',5,'lua','textArea','',0
 INSERT INTO ejaFields VALUES(257,1,'2010-01-07 14:17:23',1,'username','text','',1,1,1,0,'',0);
 INSERT INTO ejaFields VALUES(258,1,'2010-01-07 14:18:05',1,'password','password','',2,2,2,0,'',0);
 INSERT INTO ejaFields VALUES(261,1,'2010-01-14 16:26:59',21,'ejaLog','datetimeRange','',10,10,10,0,'',0);
+INSERT INTO ejaFields VALUES(266,1,'2019-11-14 12:38:13',36,'ejaModuleName','sqlMatrix','SELECT name AS value,name AS title FROM ejaModules ORDER BY name;',10,'','',0,'',0);
+INSERT INTO ejaFields VALUES(267,1,'2019-11-14 12:39:06',36,'data','textArea','',100,'','',0,'',0);
+INSERT INTO ejaFields VALUES(268,1,'2019-11-14 12:40:38',36,'action','select','import
+export',5,'','',0,'',0);
 CREATE TABLE ejaGroups (
   ejaId INTEGER NOT NULL PRIMARY KEY,
   ejaOwner int default 0,
@@ -343,6 +347,7 @@ INSERT INTO ejaModules VALUES(25,1,'2007-09-07 17:12:31',2,'ejaStructure',2,0,0,
 INSERT INTO ejaModules VALUES(26,1,'2007-09-07 17:13:06',2,'ejaAdministration',1,0,0,NULL,NULL);
 INSERT INTO ejaModules VALUES(34,1,'2007-10-02 09:19:31',25,'ejaModuleLinks',5,1,0,NULL,NULL);
 INSERT INTO ejaModules VALUES(35,1,'2007-10-02 17:00:20',2,'ejaSystem',3,0,0,NULL,NULL);
+INSERT INTO ejaModules VALUES(36,1,'2007-10-24 18:41:44',35,'ejaBackups',10,0,0,NULL,NULL);
 CREATE TABLE ejaPermissions (
   ejaId INTEGER NOT NULL PRIMARY KEY,
   ejaOwner int default 0,
@@ -462,6 +467,7 @@ INSERT INTO ejaPermissions VALUES (274,1,'2007-10-02 09:24:08',34,9);
 INSERT INTO ejaPermissions VALUES (275,1,'2007-10-02 09:24:08',34,10);
 INSERT INTO ejaPermissions VALUES (276,1,'2007-10-02 09:24:08',34,11);
 INSERT INTO ejaPermissions VALUES (281,1,'2007-10-02 17:09:02',35,2);
+INSERT INTO ejaPermissions VALUES (282,1,'2007-10-25 10:27:06',36,13);
 INSERT INTO ejaPermissions VALUES (480,1,'2008-03-04 12:42:47',14,14);
 INSERT INTO ejaPermissions VALUES (481,1,'2008-03-04 12:43:05',14,15);
 INSERT INTO ejaPermissions VALUES (482,1,'2008-03-04 15:37:08',16,15);
@@ -687,6 +693,7 @@ INSERT INTO ejaTranslations VALUES(549,1,'2008-04-04 12:34:17','en',0,'alertEdit
 INSERT INTO ejaTranslations VALUES(784,1,'2008-04-15 23:23:35','en',0,'alertEditFileMove','moved');
 INSERT INTO ejaTranslations VALUES(855,1,'2010-01-28 09:46:07','en',0,'ejaDateFrom','from');
 INSERT INTO ejaTranslations VALUES(856,1,'2010-01-28 09:46:07','en',0,'ejaDateTo','to');
+
 COMMIT;
 
 
@@ -705,63 +712,52 @@ ALTER TABLE ejaTranslations CHANGE ejaId ejaId INTEGER AUTO_INCREMENT;
 ALTER TABLE ejaUsers CHANGE ejaId ejaId INTEGER AUTO_INCREMENT;
 
 
-/* BIG INT UNSIGNED */
-/* todo
-ALTER TABLE ejaCommands CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaCommands CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaFields CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaFields CHANGE ejaModuleId ejaModuleId BIGINT UNSIGNED; 
-ALTER TABLE ejaFields CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaGroups CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaGroups CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaLanguages CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaLanguages CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaLinks CHANGE dstFieldId dstFieldId BIGINT UNSIGNED; 
-ALTER TABLE ejaLinks CHANGE dstModuleId dstModuleId BIGINT UNSIGNED; 
-ALTER TABLE ejaLinks CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaLinks CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaLinks CHANGE srcFieldId srcFieldId BIGINT UNSIGNED; 
-ALTER TABLE ejaLinks CHANGE srcModuleId srcModuleId BIGINT UNSIGNED; 
-ALTER TABLE ejaLogin CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaLogin CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaModuleLinks CHANGE dstModuleId dstModuleId BIGINT UNSIGNED;
-ALTER TABLE ejaModuleLinks CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaModuleLinks CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaModuleLinks CHANGE srcModuleId srcModuleId BIGINT UNSIGNED;
-ALTER TABLE ejaModules CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaModules CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaModules CHANGE parentId parentId BIGINT UNSIGNED;
-ALTER TABLE ejaPermissions CHANGE ejaCommandId ejaCommandId BIGINT UNSIGNED;
-ALTER TABLE ejaPermissions CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaPermissions CHANGE ejaModuleId ejaModuleId BIGINT UNSIGNED;
-ALTER TABLE ejaPermissions CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaSessions CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaSessions CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaTranslations CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaTranslations CHANGE ejaModuleId ejaModuleId BIGINT UNSIGNED;
-ALTER TABLE ejaTranslations CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-ALTER TABLE ejaUsers CHANGE defaultModuleId defaultModuleId BIGINT UNSIGNED;
-ALTER TABLE ejaUsers CHANGE ejaId ejaId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE ejaUsers CHANGE ejaOwner ejaOwner BIGINT UNSIGNED;
-*/
-
 /* change password update */
 INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:03',2,'passwordOld','password','',10,0,0,0,'',0);
 INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:30',2,'passwordNew','password','',20,0,0,0,'',0);
 INSERT INTO ejaFields VALUES(NULL,1,'2016-01-28 10:54:46',2,'passwordNewRepeat','password','',30,0,0,0,'',0);
 INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,70,15,2,1);
 INSERT INTO ejaLinks VALUES(NULL,1,'2016-01-28 10:05:40',16,71,15,2,1);
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',2,'passwordChangeSuccess','Password changed');
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',2,'passwordChangeError','Password change error');
 UPDATE ejaModules SET lua='
  if ejaNumber(tibulaModuleLuaStep)==0 and ejaNumber(tibula.ejaOwner) > 0 and ejaString(tibula.ejaAction)=="run" then
   if ejaString(tibula.ejaValues.passwordOld)~="" and ejaString(tibula.ejaValues.passwordNew)~="" and ejaString(tibula.ejaValues.passwordNew)==ejaString(tibula.ejaValues.passwordNewRepeat) then
    if tibulaSqlRun("UPDATE ejaUsers SET password=''%s'' WHERE ejaId=%d AND (password=''%s'' OR password=''%s'');",ejaSha256(tibula.ejaValues.passwordNew),tibula.ejaOwner,ejaSha256(tibula.ejaValues.passwordOld),tibula.ejaValues.passwordOld) then
-    tibulaInfo("Password changed")
+    tibulaInfo("passwordChangeSuccess")
    end
   else
-   tibulaInfo("Password problem")
+   tibulaInfo("passwordChangeError")
   end
  end
- ' WHERE ejaId=2;
+ ' WHERE name="eja";
 UPDATE ejaPermissions SET ejaCommandId=13 where ejaId=71;
+
+/* backup import/export */
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'ejaModuleName','Module');
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportSuccess','Data Exported');
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportError','Data Export Problem');
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupImportSuccess','Module Imported');
+INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupImportError','Module Import problem');
+UPDATE ejaModules SET lua='
+ if ejaNumber(tibulaModuleLuaStep)==0 and ejaNumber(tibula.ejaOwner) > 0 and ejaString(tibula.ejaAction)=="run" then
+  if ejaString(tibula.ejaValues.action) == "export" then
+   if ejaString(tibula.ejaValues.ejaModuleName) ~= "" then
+    tibula.ejaValues.data=ejaJsonEncode(tibulaModuleExport(tibula.ejaValues.ejaModuleName))
+    tibulaInfo("backupExportSuccess")
+   else
+    tibulaInfo("backupExportError")
+   end
+  end
+  if ejaString(tibula.ejaValues.action) == "import" then
+   local dd=ejaJsonDecode(tibula.ejaValues.data)
+   if dd and tibulaModuleImport(dd) then
+    tibulaInfo("backupImportSuccess")       
+   else
+    tibulaInfo("backupImportError")      
+   end
+  end
+ end
+' WHERE name="ejaBackups";
 
 

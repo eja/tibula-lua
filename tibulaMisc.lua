@@ -170,9 +170,9 @@ end
 function tibulaModuleImport(a,tableName)	--import a tibula module with fields, commands and permission
  local tableName=tableName or a.name
  local owner=1;
- local id=tibulaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",tableName)
+ local id=tibulaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",tableName) or nil
  local parentId=tibulaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",a.module.parentName) 
- if ejaNumber(parentId) < 1 then parentId=1 end
+ if ejaNumber(parentId) < 1 then parentId=2 end
  if ejaNumber(a.module.sqlCreated) > 0 then 
   tibulaSqlTableCreate(tableName);
  end
@@ -200,6 +200,7 @@ function tibulaModuleImport(a,tableName)	--import a tibula module with fields, c
     owner,tibulaSqlNow(),src,tibulaSqlLastId(),dst,owner);     
   end
  end
+ return id
 end
 
 

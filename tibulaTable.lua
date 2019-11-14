@@ -441,7 +441,7 @@ function tibulaTableRun(web)	--main tibula engine
     tibula.ejaActionType="Search" 
    end
   tibula.ejaFields=tibulaSqlFieldsMatrix(tibula.ejaModuleId, tibula.ejaActionType);
-end
+ end
   
  -- lua module script last call.
  tibulaModuleLua(1,web);
