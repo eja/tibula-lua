@@ -123,10 +123,6 @@ INSERT INTO ejaFields VALUES(248,1,'2010-01-07 12:00:13',5,'lua','textArea','',0
 INSERT INTO ejaFields VALUES(257,1,'2010-01-07 14:17:23',1,'username','text','',1,1,1,0,'',0);
 INSERT INTO ejaFields VALUES(258,1,'2010-01-07 14:18:05',1,'password','password','',2,2,2,0,'',0);
 INSERT INTO ejaFields VALUES(261,1,'2010-01-14 16:26:59',21,'ejaLog','datetimeRange','',10,10,10,0,'',0);
-INSERT INTO ejaFields VALUES(266,1,'2019-11-14 12:38:13',36,'ejaModuleName','sqlMatrix','SELECT name AS value,name AS title FROM ejaModules ORDER BY name;',10,'','',0,'',0);
-INSERT INTO ejaFields VALUES(267,1,'2019-11-14 12:39:06',36,'data','textArea','',100,'','',0,'',0);
-INSERT INTO ejaFields VALUES(268,1,'2019-11-14 12:40:38',36,'action','select','import
-export',5,'','',0,'',0);
 CREATE TABLE ejaGroups (
   ejaId INTEGER NOT NULL PRIMARY KEY,
   ejaOwner int default 0,
@@ -734,6 +730,10 @@ UPDATE ejaModules SET lua='
 UPDATE ejaPermissions SET ejaCommandId=13 where ejaId=71;
 
 /* backup import/export */
+INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:38:13',36,'ejaModuleName','sqlMatrix','SELECT name AS value,name AS title FROM ejaModules ORDER BY name;',10,'','',0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:39:06',36,'data','textArea','',100,'','',0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:40:38',36,'action','select','import
+export',5,'','',0,'',0);
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'ejaModuleName','Module');
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportSuccess','Data Exported');
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportError','Data Export Problem');
