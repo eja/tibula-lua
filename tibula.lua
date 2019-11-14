@@ -10,6 +10,8 @@ eja.mimeApp['application/tibula']='tibulaWeb'
 eja.lib.tibulaStop='tibulaStop'
 eja.lib.tibulaStart='tibulaStart'
 eja.lib.tibulaInstall='tibulaInstall'
+eja.lib.tibulaImport='tibulaImport'
+eja.lib.tibulaExport='tibulaExport'
 
 eja.help.tibulaStart='start tibula [web port] {35248}'
 eja.help.tibulaStop='stop tibula [web port] {35248}'
@@ -17,6 +19,8 @@ eja.help.tibulaInstall='create db/user and install demo version'
 eja.help.tibulaPath='tibula data path'
 eja.help.tibulaScript='javascript full url {https://cdn.tibula.net/tibula.js}'
 eja.help.tibulaCron='cron keep alive interval {0=off}'
+eja.help.tibulaImport='import module {file name}'
+eja.help.tibulaExport='export module {module name}'
 
 eja.opt.webSize=65536
 
@@ -69,10 +73,7 @@ end
 function tibulaWeb(web) 
  tibulaCheck()
  tibulaTableStart()
-
- if not tibulaSqlConnection or not tibulaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
-  tibulaSqlStart(eja.opt.sqlType,eja.opt.sqlUsername,eja.opt.sqlPassword,eja.opt.sqlHostname,eja.opt.sqlDatabase) 
- end
+ tibulaSqlCheck()
  
  if web.postFile and web.headerIn then
   if web.headerIn['content-type'] == 'application/json' then
@@ -161,5 +162,33 @@ function tibulaInstall()
   end
  else
   ejaError('[tibula] username, password and database name are mandatory')
+ end
+end
+
+
+function tibulaImport(module)
+ local module=module or eja.opt.tibulaImport
+ local data=ejaJsonFileRead(module)
+ if data then
+  if tibulaSqlCheck() then
+   tibulaModuleImport(data)
+   ejaInfo('[tibula] module %s imported from file %s',data.name,module)
+  end
+ else
+  ejaError('[tibula] file not valid')
+ end
+end
+
+
+function tibulaExport(module)
+ local module=module or eja.opt.tibulaExport
+ if tibulaSqlCheck() then
+  local data=ejaJsonEncode(tibulaModuleExport(module),1)
+  if data then
+   ejaFileWrite(module..'.json',data)
+   ejaInfo('[tibula] module %s exported to file %s.json',module,module)
+  else
+   ejaError('[tibula] module not found') 
+  end
  end
 end

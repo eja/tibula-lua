@@ -13,6 +13,14 @@ tibulaSqlType=nil
 tibulaSqlConnection=nil
 
 
+function tibulaSqlCheck()
+ if not tibulaSqlConnection or not tibulaSqlRun("SELECT COUNT(*) FROM ejaSessions;") then 
+  tibulaSqlStart(eja.opt.tibulaType,eja.opt.tibulaUsername,eja.opt.tibulaPassword,eja.opt.tibulaHostname,eja.opt.tibulaDatabase) 
+ end
+ return tibulaSqlConnection
+end
+
+
 function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)	--start sql connection
 
  local sqlType=sqlType or eja.opt.sqlType or "maria"
