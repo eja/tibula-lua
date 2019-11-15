@@ -159,6 +159,7 @@ function tibulaModuleExport(name)   --export a tibula module with fields and com
  a.name=name
  a.module=tibulaSqlArray("SELECT a.searchLimit,a.sqlCreated,a.power,a.sortList,a.lua,(SELECT x.name FROM ejaModules AS x WHERE x.ejaId=a.parentId) AS parentName FROM ejaModules AS a WHERE ejaId=%s;",id)
  a.field=tibulaSqlMatrix("SELECT translate,matrixUpdate,powerEdit,name,type,powerList,powerSearch,value FROM ejaFields WHERE ejaModuleId=%s;",id)
+ a.translation=tibulaSqlMatrix([[SELECT ejaLanguage,word,translation,(SELECT ejaModules.name FROM ejaModules WHERE ejaModules.ejaId=ejaModuleId) AS ejaModuleName FROM ejaTranslations WHERE ejaModuleId=%s OR word='%s';]],id,name)
  a.command={}
  for _,row in next,tibulaSqlMatrix([[SELECT name from ejaCommands WHERE ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%s);]],id) do
   a.command[#a.command+1]=row.name
@@ -198,6 +199,13 @@ function tibulaModuleImport(a,tableName)	--import a tibula module with fields, c
    tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId,ejaOwner,ejaLog,ejaModuleId,ejaCommandId) VALUES (NULL,%s,'%s',%s,(SELECT x.ejaId FROM ejaCommands AS x WHERE x.name='%s' LIMIT 1));]],owner,tibulaSqlNow(),id,v)
    tibulaSqlRun([[INSERT INTO ejaLinks (ejaId,ejaOwner,ejaLog,srcModuleId,srcFieldId,dstModuleId,dstFieldId,power) VALUES (NULL,%s,'%s','%s','%s','%s','%s',1);]],
     owner,tibulaSqlNow(),src,tibulaSqlLastId(),dst,owner);     
+  end
+  tibulaSqlRun([[DELETE FROM ejaTranslations WHERE ejaModuleId=%d;]],id)
+  tibulaSqlRun([[DELETE FROM ejaTranslations WHERE word='%s' AND ejaModuleId < 1;]],tableName)
+  for _,row in next,a.translation do
+   local tmpId=id
+   if ejaString(row.ejaModuleName) ~= tableName then tmpId=0 end
+   ejaSqlRun([[INSERT INTO ejaTranslations (ejaId,ejaOwner,ejaLog,ejaModuleId,ejaLanguage,word,translation) VALUES (NULL,%s,'%s','%s','%s','%s','%s');]],owner,tibulaSqlNow(),tmpId,row.ejaLanguage,row.word,row.translation);
   end
  end
  return id

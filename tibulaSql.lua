@@ -632,22 +632,6 @@ function tibulaSelectToArray(value)      --convert a "|" separated list of "\n" 
 end
 
 
-function tibulaModuleExport(name)   --export a tibula module with fields and commands
- local a={}
- local id=tibulaSqlRun("SELECT ejaId FROM ejaModules WHERE name='%s';",name)
- a.name=name
- a.module=tibulaSqlArray("SELECT a.searchLimit,a.sqlCreated,a.power,a.sortList,a.lua,(SELECT x.name FROM ejaModules AS x WHERE x.ejaId=a.parentId) AS parentName FROM ejaModules AS a WHERE ejaId=%s;",id)
- a.field=tibulaSqlMatrix("SELECT translate,matrixUpdate,powerEdit,name,type,powerList,powerSearch,value FROM ejaFields WHERE ejaModuleId=%s;",id)
- a.command={}
- for _,row in next,tibulaSqlMatrix([[SELECT name from ejaCommands WHERE ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%s);]],id) do
-  a.command[#a.command+1]=row.name
- end
- return a
-end
-
-
-
-
 --deprecated functions
 function ejaSqlArray(query,...) return tibulaSqlArray(query,...); end
 function ejaSqlEscape(data) return tibulaSqlEscape(data); end
