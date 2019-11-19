@@ -52,6 +52,7 @@ install: $(prefix)/bin/eja tibula
 
 
 update: clean-all
+	@  cat *.lua > tibula.eja
 	@  git add .
 	@- git commit
 	@  git push -u origin master
