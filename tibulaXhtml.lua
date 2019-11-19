@@ -146,6 +146,7 @@ end
 
 function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--return the xhtml field for name of tType. 
  local r="";
+ local fieldValueEncoded=fieldValue:gsub(".",function(x) return string.format("&#x%x;",x:byte()) end)
 
  if ejaCheck(fieldType,"label") then 
   r=r..ejaSprintf('<div class="ejaModule%s">%s</div>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
@@ -156,8 +157,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  end 
 
  if ejaCheck(fieldType,"text") or ejaCheck(fieldType,"password") then
-  local value=fieldValue:gsub(".",function(x) return string.format("&#x%x;",x:byte()) end)
-  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,value);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,fieldValueEncoded);
  end
 
  if ejaCheck(fieldType,"integer") or ejaCheck(fieldType,"integerRange") or ejaCheck(fieldType,"decimal") then
@@ -223,7 +223,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  end
  
  if ejaCheck(fieldType,"hidden") then
-  r=r..ejaSprintf('<fieldset class="ejaModule%s"><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),fieldType,fieldName,fieldValue);
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),fieldType,fieldName,fieldValueEncoded);
  end
  
  if ejaCheck(fieldType,"file") then 
