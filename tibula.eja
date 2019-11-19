@@ -1879,7 +1879,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  end 
 
  if ejaCheck(fieldType,"text") or ejaCheck(fieldType,"password") then
-  local value=fieldValue:gsub(".",function(x) return string.format("&#x%X",x:byte()) end)
+  local value=fieldValue:gsub(".",function(x) return string.format("&#x%x;",x:byte()) end)
   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,value);
  end
 
