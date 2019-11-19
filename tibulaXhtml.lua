@@ -1,13 +1,13 @@
--- Copyright (C) 2007-2018 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Magyar rapszódiák
 
 
 function tibulaXhtmlExport(moduleId)         --export data as xhtml output
- tibula['ejaHttpHeaders']["Content-Type"]="text/html; charset=utf-8"
- tibula['ejaHttpHeaders']["Pragma"]="no-cache";
- tibula['ejaHttpHeaders']["Expires"]= "-1";
- tibula['ejaHttpHeaders']["Cache-Control"]="no-cache";
+ tibula.ejaHttpHeaders["Content-Type"]="text/html; charset=utf-8"
+ tibula.ejaHttpHeaders["Pragma"]="no-cache";
+ tibula.ejaHttpHeaders["Expires"]= "-1";
+ tibula.ejaHttpHeaders["Cache-Control"]="no-cache";
  
  local r=''
  r=r..tibulaXhtmlHeader()
@@ -27,15 +27,15 @@ function tibulaXhtmlHeader() 	--return xhtml header and open form
  local script=eja.opt.tibulaScript or "https://cdn.tibula.net/tibula.js"
  
  r=ejaSprintf('<!DOCTYPE html>');
- r=r..ejaSprintf('<html lang="%s">',tibula['ejaLanguage'],tibula['ejaLanguage']);
+ r=r..ejaSprintf('<html lang="%s">',tibula.ejaLanguage,tibula.ejaLanguage);
  r=r..ejaSprintf('<head>');
  r=r..ejaSprintf('<meta charset="utf-8">')
  r=r..ejaSprintf('<meta name="author" content="ubaldo@eja.it">')
  r=r..ejaSprintf('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
  r=r..ejaSprintf('<script type="text/javascript" src="%s"></script>',script);
- r=r..ejaSprintf('<title>[%s]</title>',tibulaTranslate(tibula['ejaModuleName']));
+ r=r..ejaSprintf('<title>[%s]</title>',tibulaTranslate(tibula.ejaModuleName));
  r=r..ejaSprintf('</head>');
- r=r..ejaSprintf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula['ejaLanguage']);
+ r=r..ejaSprintf('<body><div id="ejaPage"><form name="ejaForm" action="?ejaLanguage=%s" method="post">',tibula.ejaLanguage);
 
  return r;
 end
@@ -44,9 +44,9 @@ end
 function tibulaXhtmlFooter()	--return xhtml closed tags 
  local r=""
  
- if ejaCheck(tibula['ejaId']) then r=r..ejaSprintf('<input type="hidden" name="ejaId" value="%d"/>',tibula['ejaId']); end
- if ejaCheck(tibula['ejaModuleId']) then r=r..ejaSprintf('<input type="hidden" name="ejaModuleId" value="%d"/>',tibula['ejaModuleId']); end
- if ejaCheck(tibula['ejaSession']) then r=r..ejaSprintf('<input type="hidden" name="ejaSession" value="%s"/>',tibula['ejaSession']); end
+ if ejaNumber(tibula.ejaId) > 0 then r=r..ejaSprintf('<input type="hidden" name="ejaId" value="%d"/>',tibula.ejaId); end
+ if ejaNumber(tibula.ejaModuleId) > 0 then r=r..ejaSprintf('<input type="hidden" name="ejaModuleId" value="%d"/>',tibula.ejaModuleId); end
+ if ejaString(tibula.ejaSession) ~= "" then r=r..ejaSprintf('<input type="hidden" name="ejaSession" value="%s"/>',tibula.ejaSession); end
  r=r..ejaSprintf('</form></div></body></html>');
  
  return r;
@@ -156,7 +156,8 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
  end 
 
  if ejaCheck(fieldType,"text") or ejaCheck(fieldType,"password") then
-  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,fieldValue);
+  local value=fieldValue:gsub(".",function(x) return string.format("&#x%X",x:byte()) end)
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="%s" name="ejaValues[%s]" value="%s"/></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldType,fieldName,value);
  end
 
  if ejaCheck(fieldType,"integer") or ejaCheck(fieldType,"integerRange") or ejaCheck(fieldType,"decimal") then
