@@ -42,30 +42,23 @@ function tibulaSqlStart(sqlType,sqlUsername,sqlPassword,sqlHostname,sqlDatabase)
  end
 
  if eja.sql then 
-  if sqlType=="maria" then
-   tibulaSqlConnection=ejaMariaOpen(sqlHostname,3306,sqlUsername,sqlPassword,sqlDatabase)
-   tibulaSqlRun("SET SESSION sql_mode = '';")
-   tibulaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");     
-  end
- 
-  if sqlType=="mysql" then 
-   tibulaSqlConnection=eja.sql.mysql():connect(sqlDatabase,sqlUsername,sqlPassword,sqlHostname);
-   tibulaSqlRun("SET SESSION sql_mode = '';");
-   tibulaSqlRun("CREATE TABLE IF NOT EXISTS `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");     
-  end
- 
-  if sqlType=="sqlite3" then
-   tibulaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase);
-   if tibulaSqlConnection then
-    tibulaSqlRun("PRAGMA journal_mode = MEMORY;");
-    if ejaString(sqlPassword) ~= "" then tibulaSqlRun("PRAGMA key = '%s';",sqlPassword); end
-    tibulaSqlRun("PRAGMA temp_store = MEMORY;");
-   end
-  end
+  if sqlType=="maria" then tibulaSqlConnection=ejaMariaOpen(sqlHostname,3306,sqlUsername,sqlPassword,sqlDatabase); end
+  if sqlType=="mysql" then tibulaSqlConnection=eja.sql.mysql():connect(sqlDatabase,sqlUsername,sqlPassword,sqlHostname); end
+  if sqlType=="sqlite3" then tibulaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase); end
  end
 
  if tibulaSqlConnection then 
   ejaDebug('[sql] %s connection open',sqlType) 
+  if sqlTable=="maria" or sqlTable=="mysql" then
+   tibulaSqlRun("SET SESSION sql_mode = '';")
+   tibulaSqlRun("DROP TABLE ejaSessions;");   
+   tibulaSqlRun("CREATE TABLE `ejaSessions` (`ejaId` integer NOT NULL AUTO_INCREMENT primary key, `ejaOwner` integer default 0, `ejaLog` datetime default NULL, `name` varchar(255) default NULL, `value` varchar(8192), `sub` varchar(255) default NULL) ENGINE=MEMORY;");     
+  end
+  if sqlType=="sqlite3" then
+   tibulaSqlRun("PRAGMA journal_mode = MEMORY;");
+   if ejaString(sqlPassword) ~= "" then tibulaSqlRun("PRAGMA key = '%s';",sqlPassword); end
+   tibulaSqlRun("PRAGMA temp_store = MEMORY;");
+  end
  else
   ejaError('[sql] %s connection error',sqlType)
  end
