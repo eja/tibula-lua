@@ -1862,7 +1862,7 @@ end
 
 function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--return the xhtml field for name of tType. 
  local r="";
- local fieldValueEncoded=fieldValue:gsub(".",function(x) return string.format("&#x%x;",x:byte()) end)
+ local fieldValueEncoded=ejaString(fieldValue):gsub(".",function(x) return string.format("&#x%x;",x:byte()) end)
 
  if ejaCheck(fieldType,"label") then 
   r=r..ejaSprintf('<div class="ejaModule%s">%s</div>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
