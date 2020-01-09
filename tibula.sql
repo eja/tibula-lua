@@ -730,10 +730,10 @@ UPDATE ejaModules SET lua='
 UPDATE ejaPermissions SET ejaCommandId=13 where ejaId=71;
 
 /* backup import/export */
-INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:38:13',36,'ejaModuleName','sqlMatrix','SELECT name AS value,name AS title FROM ejaModules ORDER BY name;',10,'','',0,'',0);
-INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:39:06',36,'data','textArea','',100,'','',0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:38:13',36,'ejaModuleName','sqlMatrix','SELECT name AS value,name AS title FROM ejaModules ORDER BY name;',10,0,0,0,'',0);
+INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:39:06',36,'data','textArea','',100,0,0,0,'',0);
 INSERT INTO ejaFields VALUES(NULL,1,'2019-11-14 12:40:38',36,'action','select','import
-export',5,'','',0,'',0);
+export',5,0,0,0,'',0);
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'ejaModuleName','Module');
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportSuccess','Data Exported');
 INSERT INTO ejaTranslations VALUES(NULL,1,'2019-11-14 13:21:07','en',36,'backupExportError','Data Export Problem');
