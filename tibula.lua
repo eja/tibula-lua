@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2020 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Suite española, Op. 47 
 
@@ -26,7 +26,7 @@ eja.opt.webSize=65536
 
 
 function tibulaCheck()
- if ejaNumber(eja.version) == 0 or ejaNumber(eja.version) < 12.1024 then
+ if ejaNumber(eja.version) == 0 or ejaNumber(eja.version) < 12.1216 then
   ejaError('[tibula] eja version too old, please update eja first.')
   os.exit()
  end

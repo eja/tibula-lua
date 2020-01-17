@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2020 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Prelude Op. 23 No. 5
 
@@ -287,8 +287,6 @@ function tibulaSqlQuery(query,...)	--filter sql query
  for k,v in next,argIn do
   if tonumber(k) then
    str=tostring(v)
-   str=str:gsub("'","''")  
-   str=str:gsub("%%","%%%%")   
    argOut[k]=str
   end
  end
