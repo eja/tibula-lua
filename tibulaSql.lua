@@ -292,7 +292,7 @@ function tibulaSqlQuery(query,...)	--filter sql query
  end
  query=string.format(query,table.unpack(argOut))
  
- if ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
+ if not query:upper():match('^SET') and ejaCheck(tibula['ejaOwner']) and ejaCheck(tibula['ejaModuleId']) and not ejaCheck(tibula['ejaModuleName'],"ejaFields") and not ejaCheck(tibula['ejaModuleName'],"ejaSql") and not ejaCheck(tibula['ejaModuleName'],"ejaBackups") then
   query=string.gsub(query,"@ejaOwner",tibula['ejaOwner']);
  end
 
