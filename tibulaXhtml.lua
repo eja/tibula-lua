@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2019 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2020 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Magyar rapszódiák
 
@@ -152,7 +152,7 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
   r=r..ejaSprintf('<div class="ejaModule%s">%s</div>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName));
  end 
  
- if ejaCheck(fieldType,"sqlTable") or ( ejaCheck(fieldType,"view") and ejaCheck(fieldValueArray) ) then 
+ if ejaCheck(fieldType,"sqlTable") then 
   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),tibulaXhtmlTable(fieldValueArray,0));
  end 
 
@@ -218,8 +218,8 @@ function tibulaXhtmlField(fieldName, fieldType, fieldValue, fieldValueArray) 	--
   r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><b>%s</b></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldValue); 
  end
  
- if ejaCheck(fieldType,"view") and not ejaCheck(fieldValueArray) then
-  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend>%s&nbsp;</fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),fieldValue);
+ if ejaCheck(fieldType,"view") then
+  r=r..ejaSprintf('<fieldset class="ejaModule%s"><legend>%s</legend><input type="text" value="%s" disabled></fieldset>',tibulaUCFirst(fieldType),tibulaTranslate(fieldName),ejaString(fieldValue));
  end
  
  if ejaCheck(fieldType,"hidden") then
