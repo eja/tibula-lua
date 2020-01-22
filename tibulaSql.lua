@@ -557,7 +557,14 @@ function tibulaSqlSearchRowFilter(head,row) 	--return filtered row with translat
    if ejaCheck(string.sub(v,1,5),"ejaId") then 
     value=head[v]['value'][a['ejaId']]; 
    else 
-    value=head[v]['value'][row[v]]; 
+    value=head[v]['value'][row[v]];
+    if not value then
+     for k1,v1 in next,head[v]['value'] do
+      if ejaString(k1) == ejaString(row[v]) then
+       value=v1
+      end
+     end
+    end 
    end
   end
   
