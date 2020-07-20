@@ -40,6 +40,9 @@ function tibulaStart()
  else
   eja.opt.webPort=eja.opt.webPort or 35248
  end
+ if ejaString(eja.opt.webHost) == "" then
+  eja.opt.webHost="127.0.0.1"
+ end 
  ejaInfo('[tibula] starting on web port %s and database %s',eja.opt.webPort,eja.opt.tibulaDatabase);
  if tibulaSqlStart(eja.opt.tibulaType,eja.opt.tibulaUsername,eja.opt.tibulaPassword,eja.opt.tibulaHostname,eja.opt.tibulaDatabase) then
   if ejaNumber(eja.opt.tibulaCron) > 0 then
