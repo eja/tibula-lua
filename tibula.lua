@@ -141,13 +141,13 @@ function tibulaInstall()
    FLUSH PRIVILEGES;
    USE %s;
   ]],db,user,host,pass,db,user,host,db))
-  ejaFileWrite(sqlTmpFile,ejaWebGet("https://raw.githubusercontent.com/eja/tibula/master/tibula.sql"));
+  ejaFileAppend(sqlTmpFile,ejaWebGet("https://raw.githubusercontent.com/eja/tibula/master/tibula.sql"));
   if installUsername ~= "" and installPassword ~= "" then
    ejaExecute('mysql -u %s -p%s < %s',installUsername,installPassword,sqlTmpFile)
   else
    ejaExecute('mysql < "%s"',sqlTmpFile)   
   end
-  ejaFileRemove(sqlTmpFile)
+--  ejaFileRemove(sqlTmpFile)
   if tibulaSqlStart('maria',user,pass,'localhost',db) then
    ejaInfo('[tibula] database ready')
    if not ejaFileStat(eja.pathEtc..'/eja.init') then ejaSetup() end
