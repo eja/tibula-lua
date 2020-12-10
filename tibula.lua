@@ -141,7 +141,7 @@ function tibulaInstall()
    FLUSH PRIVILEGES;
    USE %s;
   ]],db,user,host,pass,db,user,host,db))
-  ejaExecute('wget -qO - "http://github.com/ubaldus/tibula/raw/master/tibula.sql" >> %s',sqlTmpFile)
+  ejaFileWrite(sqlTmpFile,ejaWebGet("https://raw.githubusercontent.com/eja/tibula/master/tibula.sql"));
   if installUsername ~= "" and installPassword ~= "" then
    ejaExecute('mysql -u %s -p%s < %s',installUsername,installPassword,sqlTmpFile)
   else
