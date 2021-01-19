@@ -147,7 +147,7 @@ function tibulaInstall()
   else
    ejaExecute('mysql < "%s"',sqlTmpFile)   
   end
---  ejaFileRemove(sqlTmpFile)
+  ejaFileRemove(sqlTmpFile)
   if tibulaSqlStart('maria',user,pass,'localhost',db) then
    ejaInfo('[tibula] database ready')
    if not ejaFileStat(eja.pathEtc..'/eja.init') then ejaSetup() end
