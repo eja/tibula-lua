@@ -1,7 +1,7 @@
-Tibula	Copyright (C) 2007-2020 by Ubaldo Porcheddu <ubaldo@eja.it>
+Tibula	Copyright (C) 2007-2021 by Ubaldo Porcheddu <ubaldo@eja.it>
 
 
-Tibula is a database web application framework based on eja micro web server.
+Tibula is a database web application framework based on the eja micro web server.
 
 It can be used as a standalone application or as an eja library.
 
