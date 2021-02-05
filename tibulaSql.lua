@@ -786,12 +786,12 @@ end
 
 
 function tibulaSqlPermissionAdd(userId, moduleId, commandName)
- return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE name='%s';]], userId, moduleId, commandName);
+ return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE name='%s';]], userId, tibulaSqlNow(), moduleId, commandName);
 end
 
 
 function tibulaSqlPermissionAddDefault(userId, moduleId)
- return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE defaultCommand>0;]], userId, moduleId);
+ return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE defaultCommand>0;]], userId, tibulaSqlNow(), moduleId);
 end
 
 
