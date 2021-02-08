@@ -129,8 +129,8 @@ function tibulaInstall()
  local pass=eja.opt.tibulaPassword or ejaReadLine("new tibula db password: ");
  local host=eja.opt.tibulaHostname or "localhost";
  local db=eja.opt.tibulaDatabase or ejaReadLine("new tibula db name: ");
- local installUsername=eja.opt.tibulaInstallUsername; 
- local installPassword=eja.opt.tibulaInstallPassword;
+ local installUsername=eja.opt.tibulaInstallUsername or ""; 
+ local installPassword=eja.opt.tibulaInstallPassword or "";
  if not installUsername and not installPassword and ejaString(os.getenv("USER")) ~= "root" then
   installUsername=ejaReadLine("local db username: ");
   installPassword=ejaReadLine("local db password: ");
