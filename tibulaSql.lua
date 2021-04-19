@@ -824,7 +824,14 @@ function tibulaSqlSearchQuery(tableName, valueArray, ownerList)
    v=string.gsub(v, "*", "%%");
    v=string.gsub(v, "%%", "%%%%%%%%");
    if sqlTypeThis == "boolean" or sqlTypeThis == "integer" then 
-    sqlAnd=ejaSprintf(' AND %s = %d ', k, v); 
+    local s=ejaString(v);
+    if s:sub(1,1) == ">" then
+     sqlAnd=ejaSprintf(' AND %s > %d ', k, ejaNumber(s:sub(2)));
+    elseif s:sub(1,1) == "<" then
+     sqlAnd=ejaSprintf(' AND %s < %d ', k, ejaNumber(s:sub(2)));
+    else
+     sqlAnd=ejaSprintf(' AND %s = %d ', k, ejaNumber(v)); 
+    end
    end
    if sqlTypeThis == "date" or sqlTypeThis == "time" or sqlTypeThis == "datetime" then 
     sqlAnd=ejaSprintf([[ AND %s='%s' ]], k, tibulaDateSet(v, sqlTypeThis)); 
