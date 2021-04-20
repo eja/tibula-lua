@@ -117,7 +117,7 @@ function tibulaTableRun(web)	--main tibula engine
   tibula.ejaOwner=tibulaSqlUserGetIdByUserAndPass(tibula.ejaValues.username, tibula.ejaValues.password);
   if ejaNumber(tibula.ejaOwner) > 0 then
    tibulaSqlSessionResetByUserId(tibula.ejaOwner);
-   tibulaSqlUserUpdateSession(tibulaSessionCode(), tibula.ejaOwner);
+   tibulaSqlUserSessionUpdate(tibulaSessionCode(), tibula.ejaOwner);
    local row=tibulaSqlUserGetAllById(tibula.ejaOwner);
    tibula.ejaSession=ejaString(row.ejaSession);
    tibula.ejaModuleId=ejaNumber(row.defaultModuleId);

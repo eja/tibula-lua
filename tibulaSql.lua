@@ -310,9 +310,7 @@ function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for 
  else 
   moduleId=tibula.ejaModuleId; 
  end
-
- local groupOwners=tibulaSqlIncludeList([[SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaModules') AND srcFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') )) AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers');]], ownerId, moduleId);
-
+ local groupOwners=tibulaSqlIncludeList([[SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d )) AND dstModuleId=%d;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), ownerId, tibulaSqlModuleGetIdByName("ejaModules"), moduleId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers") );
  local ownerTree="";
  local sub=ownerId;
  local deep=10;
@@ -358,7 +356,7 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  end 
  if ejaString(actionType) ~= "" then order=" ORDER BY power"..actionType.. " ASC";  end
  if ejaNumber(tibula.ejaLinking) > 0 then linking=" AND linking > 0 ";  end
- query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId From ejaModules WHERE name='ejaPermissions') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d)) %s ) %s %s;]], moduleId, userId, extra, linking, order);
+ query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND ((dstModuleId=%d AND dstFieldId=%d) OR (dstModuleId=%d AND dstFieldId IN (%s)))) ) %s ) %s %s;]], moduleId, tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(userId), extra, linking, order);
  for k,v in next,tibulaSqlMatrix(query) do
   local commandName=v['name'];
   if ejaString(tibula.ejaAction) == "view" and ejaString(commandName) == "save" then commandName=""; end
@@ -392,7 +390,8 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  while id do
   row=tibulaSqlArray([[SELECT ejaId, parentId, name FROM ejaModules WHERE ejaId=%d;]], id);
   id=nil;
-  if ejaTableCount(row) > 0 and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;]], row.ejaId, ownerId) then
+  if ejaTableCount(row) > 0 and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), row.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId)) then
+--!!                                tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), row.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers")) then
    table.insert(a.pathId, row.ejaId);
    table.insert(a.pathName, row.name);
    if ejaNumber(row.parentId) > 0 then
@@ -409,7 +408,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  end
  if ejaTableCount(row) > 0 then
   for k,v in next,row do
-   if tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;]], v.ejaId, ownerId) then
+   if tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), v.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId)) then
     table.insert(a.treeId, v.ejaId);
     table.insert(a.treeName, v.name);
    end
@@ -418,7 +417,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  --links
  if ejaNumber(tibula.ejaId) > 0 then
   for k,v in next,tibulaSqlMatrix([[SELECT srcModuleId, (SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;]], moduleId) do 
-   if (ejaTableCount(tibula.ejaLinkHistory) == 0 or ejaString(tibula.ejaLinkHistory[v.srcModuleId]) == "") and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaPermissions') AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') LIMIT 1;]], v.srcModuleId, ownerId) then
+   if (ejaTableCount(tibula.ejaLinkHistory) == 0 or ejaString(tibula.ejaLinkHistory[v.srcModuleId]) == "") and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), v.srcModuleId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers")) then
     if v.srcModuleName ~= "ejaFiles" then
      table.insert(a.linkId, v.srcModuleId);
      table.insert(a.linkName, v.srcModuleName);
@@ -431,7 +430,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
   for k,v in next,tibula.ejaLinkHistory do
    if ejaString(k) ~= ejaString(moduleId) and ejaString(v) ~= "" then	
     table.insert(a.historyId, k);
-    table.insert(a.historyName, tibulaTranslate(tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d;]], k)));
+    table.insert(a.historyName, tibulaTranslate(tibulaSqlModuleGetNameById(k)));
    end 
   end 
  end
@@ -464,7 +463,7 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
    end
   end
   if ejaString(v['ejaGroup']) ~= "" and ejaString(tibula.ejaActionType) == "Edit" then	--if there is an ejaGroup then restrict to view only mode
-   if not tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaGroups') AND dstModuleId=(SELECT ejaId FROM ejaModules WHERE name='ejaUsers') AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;]], tibula.ejaOwner, v['ejaGroup']) then
+   if not tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), tibula.ejaOwner, v['ejaGroup']) then
     t="view";
    end 
   end
@@ -507,7 +506,7 @@ function tibulaSqlSearchMatrix(query, moduleId) 	--return an associative array f
  end
  tibula.ejaSqlCountTotal=0;
  local x="";
- local moduleName=tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d;]], moduleId);
+ local moduleName=tibulaSqlModuleGetNameById(moduleId);
  if ejaString(moduleName) ~= "" then x=string.find(query, "FROM "..moduleName.." WHERE"); end		--? to replace by regex
  if x then
   local queryCountFrom=string.sub(query, x, -1);
@@ -726,7 +725,7 @@ function tibulaSqlSessionResetByUserId(userId)
 end
 
 
-function tibulaSqlUserUpdateSession(session, userId);
+function tibulaSqlUserSessionUpdate(session, userId);
  return tibulaSqlRun([[UPDATE ejaUsers SET ejaSession='%s' WHERE ejaId='%d';]], session, userId); 
 end
 
@@ -747,7 +746,16 @@ end
 
 
 function tibulaSqlUserPermissionCopy(userId, moduleId)
- return tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, 1, '%s', (SELECT ejaId FROM ejaModules WHERE name='ejaPermissions'), ejaId, (SELECT ejaId FROM ejaModules WHERE name='ejaUsers'), %d, 2 from ejaPermissions where ejaModuleId=%d;]], tibulaSqlNow(), userId, moduleId);
+ return tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, 1, '%s', %d, ejaId, %d, %d, 2 from ejaPermissions where ejaModuleId=%d;]], tibulaSqlNow(), tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, moduleId);
+end
+
+function tibulaSqlUserGroupGetList(userId)
+ local r=tibulaSqlIncludeList([[SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), ejaNumber(userId));
+ if ejaString(r) == "" then 
+  return "0";
+ else
+  return r;
+ end
 end
 
 
@@ -942,8 +950,8 @@ function tibulaSqlModuleImport(a, tableName)	--import a tibula module with field
    tibulaSqlRun([[INSERT INTO ejaFields (ejaId, ejaOwner, ejaLog, ejaModuleId, name, type, value, translate, matrixUpdate, powerSearch, powerList, powerEdit) VALUES (NULL, %s, '%s', %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');]],
     owner, tibulaSqlNow(), id, v.name, v.type, v.value, v.translate, v.matrixUpdate, v.powerSearch, v.powerList, v.powerEdit);
   end
-  local src=tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='ejaPermissions';]]);
-  local dst=tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='ejaUsers';]]);
+  local src=tibulaSqlModuleGetIdByName("ejaPermissions");
+  local dst=tibulaSqlModuleGetIdByName("ejaUsers"); 
   tibulaSqlRun([[DELETE FROM ejaLinks WHERE dstModuleId=%s AND srcModuleId=%s AND srcFieldId IN (SELECT c.ejaId FROM ejaPermissions AS c WHERE c.ejaModuleId=%s);]], dst, src, id);
   tibulaSqlRun([[DELETE FROM ejaPermissions WHERE ejaModuleId=%s;]], id);
   for k,v in next,a.command do
