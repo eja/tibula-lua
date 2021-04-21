@@ -75,24 +75,20 @@ end
 
 
 function tibulaLinkHistory(module, value) 	--manage linking history
- if not tibula.ejaLinkHistory or ejaString(module) == "" then tibula.ejaLinkHistory={}; end
- if not tibula.ejaLinkHistoryOrder or ejaString(module) == "" then tibula.ejaLinkHistoryOrder={}; end
+ if not tibula.ejaLinkHistory or ejaString(module) == "" then 
+  tibula.ejaLinkHistory={}; 
+ end
 
  if ejaNumber(value) > 0 then
   tibula.ejaLinkHistory[module]=value;
-  table.insert(tibula.ejaLinkHistoryOrder, module);
  else
-  local bool=0;
-  table.sort(tibula.ejaLinkHistoryOrder);
-  for k,v in next,tibula.ejaLinkHistoryOrder do
-   if ejaString(module) == v or bool > 0 then 
-    tibula.ejaLinkHistory[v]=nil;
-    tibula.ejaLinkHistoryOrder[k]=nil;
-    bool=1;
+  for k,v in next,tibula.ejaLinkHistory do
+   if ejaNumber(module) == ejaNumber(k)  then 
+    tibula.ejaLinkHistory[k]=nil;
    end
   end
  end
- 
+
  return 0; 
 end
 

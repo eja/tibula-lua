@@ -356,7 +356,7 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  end 
  if ejaString(actionType) ~= "" then order=" ORDER BY power"..actionType.. " ASC";  end
  if ejaNumber(tibula.ejaLinking) > 0 then linking=" AND linking > 0 ";  end
- query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND ((dstModuleId=%d AND dstFieldId=%d) OR (dstModuleId=%d AND dstFieldId IN (%s)))) ) %s ) %s %s;]], moduleId, tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(userId), extra, linking, order);
+ query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND ((dstModuleId=%d AND dstFieldId=%d) OR (dstModuleId=%d AND dstFieldId IN (%s))))) %s) %s %s;]], moduleId, tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(userId), extra, linking, order);
  for k,v in next,tibulaSqlMatrix(query) do
   local commandName=v['name'];
   if ejaString(tibula.ejaAction) == "view" and ejaString(commandName) == "save" then commandName=""; end

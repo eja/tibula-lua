@@ -193,12 +193,11 @@ function tibulaTableRun(web)	--main tibula engine
    tibulaLinkHistory(tibula.ejaModuleId, 0);								--reset this ejaLinkHistory
   end
   --linking history
-  if ejaTableCount(tibula.ejaLinkHistoryOrder) > 0 then							--if linking check link type 
-   table.sort(tibula.ejaLinkHistoryOrder);
-   for k,v in next,tibula.ejaLinkHistoryOrder do
-    if ejaNumber(v) > 0 then
-     tibula.ejaLinkModuleId=v;
-     tibula.ejaLinkFieldId=tibula.ejaLinkHistory[v];
+  if ejaTableCount(tibula.ejaLinkHistory) > 0 then							--if linking check link type 
+   for k,v in next,tibula.ejaLinkHistory do
+    if ejaNumber(k) > 0 then
+     tibula.ejaLinkModuleId=k;
+     tibula.ejaLinkFieldId=v;
     end
    end
    if ejaNumber(tibula.ejaId) < 1 then tibula.ejaLinking=1; end
@@ -426,7 +425,6 @@ function tibulaTableStop()
   local ejaBkp={};
   ejaBkp.ejaSqlQuery64=tibula.ejaSqlQuery64;
   ejaBkp.ejaLinkHistory=tibula.ejaLinkHistory;
-  ejaBkp.ejaLinkHistoryOrder=tibula.ejaLinkHistoryOrder;
   ejaBkp.ejaSqlLimit=tibula.ejaSqlLimit;
   ejaBkp.ejaSqlOrder=tibula.ejaSqlOrder; 
   tibulaSqlSessionWrite(tibula.ejaOwner, ejaBkp);
