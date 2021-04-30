@@ -715,6 +715,11 @@ function tibulaSqlHelpGetText(moduleId, actionType, language)
 end
 
 
+function tibulaSqlUserGetIdByUsername(username)
+ return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' LIMIT 1;]], username));
+end
+
+
 function tibulaSqlUserGetIdByUserAndPass(username, password)
  return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' AND CASE WHEN LENGTH(password) = 64 THEN password='%s' ELSE password='%s' END;]], username, ejaSha256(password), password));
 end

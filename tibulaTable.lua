@@ -114,13 +114,11 @@ function tibulaTableRun(web)	--main tibula engine
 
  --login, set a random session value and retrieve defaultModuleId 
  if ejaString(tibula.ejaAction) == "login" and ejaString(tibula.ejaValues.username) ~= "" and ejaString(tibula.ejaValues.password) ~= "" then 
-  tibula.ejaOwner=tibulaSqlUserGetIdByUserAndPass(tibula.ejaValues.username, tibula.ejaValues.password);
-  if ejaNumber(tibula.ejaOwner) > 0 then
-   tibulaSqlSessionResetByUserId(tibula.ejaOwner);
-   tibulaSqlUserSessionUpdate(tibulaSessionCode(), tibula.ejaOwner);
-   local row=tibulaSqlUserGetAllById(tibula.ejaOwner);
-   tibula.ejaSession=ejaString(row.ejaSession);
-   tibula.ejaModuleId=ejaNumber(row.defaultModuleId);
+  tibulaTableOwnerReset(tibulaSqlUserGetIdByUserAndPass(tibula.ejaValues.username, tibula.ejaValues.password));
+ elseif ejaString(tibula.ejaValues.googleAuthToken) ~= "" then
+  local googleAuth=ejaTable(ejaJsonDecode(ejaString(ejaWebGet("https://oauth2.googleapis.com/tokeninfo?id_token="..tibula.ejaValues.googleAuthToken))));
+  if googleAuth.email then
+   tibulaTableOwnerReset(tibulaSqlUserGetIdByUsername(googleAuth.email));
   end
  end  
 
@@ -415,6 +413,21 @@ function tibulaTableExport()
 
  return data;
 end 
+
+
+function tibulaTableOwnerReset(ownerId)
+ if ejaNumber(ownerId) > 0 then
+  tibula.ejaOwner=ejaNumber(ownerId);
+  tibulaSqlSessionResetByUserId(tibula.ejaOwner);
+  tibulaSqlUserSessionUpdate(tibulaSessionCode(), tibula.ejaOwner);
+  local row=tibulaSqlUserGetAllById(tibula.ejaOwner);
+  tibula.ejaSession=ejaString(row.ejaSession);
+  tibula.ejaModuleId=ejaNumber(row.defaultModuleId);
+  return true;
+ else
+  return false;
+ end
+end
 
 
 function tibulaTableStop()
