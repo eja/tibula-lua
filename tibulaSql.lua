@@ -467,7 +467,11 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
     t="view";
    end 
   end
-  if tibula.ejaValues and tibula.ejaValues[rowName] then rowValue=tibula.ejaValues[rowName]; end
+  if tibula.ejaValues and tibula.ejaValues[rowName] then 
+   rowValue=tibula.ejaValues[rowName]; 
+  elseif ejaString(v['value']) ~= "" then
+   rowValue=v['value'];
+  end
   if rowType == "select" then rowArray=tibulaSelectToArray(v['value']); end
   if rowType == "sqlMatrix" then rowArray=tibulaSelectSqlToArray(v['value']); end
   if rowType == "sqlValue" or rowType == "sqlHidden" then rowValue=tibulaSqlRun(v['value']); end
