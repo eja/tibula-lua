@@ -316,6 +316,7 @@ CREATE TABLE ejaModuleLinks (
 INSERT INTO ejaModuleLinks VALUES(2,1,'2007-10-02 09:29:46',15,16,2,'');
 INSERT INTO ejaModuleLinks VALUES(3,1,'2007-10-02 09:29:54',15,14,3,'');
 INSERT INTO ejaModuleLinks VALUES(5,1,'2007-10-02 16:48:19',14,5,1,'');
+INSERT INTO ejaModuleLinks VALUES(6,1,'2021-05-03 10:03:29',14,16,1,'');
 CREATE TABLE ejaModules (
   ejaId INTEGER NOT NULL PRIMARY KEY,
   ejaOwner int default 0,
