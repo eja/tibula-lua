@@ -131,7 +131,7 @@ function tibulaSqlArray(query, ...)	--sql last row array
   end
  end
     
- return rowLast;
+ return ejaTable(rowLast);
 end
 
 
