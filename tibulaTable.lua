@@ -10,7 +10,7 @@ function tibulaTableStart()	--set default tibula table value
  tibula.ejaDefaultSearchOrder="ejaLog DESC";
  tibula.ejaCommandArray={};
  tibula.ejaHttpHeader={};
- tibula.ejaSqlType=tibulaSqlType;
+ tibula.ejaSqlEngine=tibulaSqlEngine;
  tibula.ejaLanguage=tibula.ejaLanguage or tibula.ejaDefaultLanguage;
  tibula.path=eja.opt.tibulaPath or eja.pathVar..'/tibula/';
 end

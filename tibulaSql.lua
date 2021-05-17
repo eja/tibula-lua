@@ -3,64 +3,66 @@
 -- Prelude Op. 23 No. 5
 
 
-eja.help.tibulaType="db type (maria|mysql|sqlite3) {maria}";
+eja.help.tibulaEngine="db engine (maria|mysql|sqlite3) {maria}";
 eja.help.tibulaUsername="db username";
 eja.help.tibulaPassword="db password";
 eja.help.tibulaHostname="db hostname";
 eja.help.tibulaDatabase="db name";
 
-tibulaSqlType=nil;
+tibulaSqlEngine=nil;
 tibulaSqlConnection=nil;
 
 
 function tibulaSqlCheck()	--check if an sql connection has been already established otherwise try to start it
  if not tibulaSqlConnection or not tibulaSqlRun([[SELECT COUNT(*) FROM ejaSessions;]]) then 
-  tibulaSqlStart(eja.opt.tibulaType, eja.opt.tibulaUsername, eja.opt.tibulaPassword, eja.opt.tibulaHostname, eja.opt.tibulaDatabase);
+  tibulaSqlStart(eja.opt.tibulaEngine, eja.opt.tibulaUsername, eja.opt.tibulaPassword, eja.opt.tibulaHostname, eja.opt.tibulaDatabase);
  end
  return tibulaSqlConnection;
 end
 
 
-function tibulaSqlStart(sqlType, sqlUsername, sqlPassword, sqlHostname, sqlDatabase)	--start sql connection
+function tibulaSqlStart(sqlEngine, sqlUsername, sqlPassword, sqlHostname, sqlDatabase)	--start sql connection
+ local sql={}
+ sql.engine=sqlEngine or eja.opt.tibulaEngine;
+ sql.username=sqlUsername or eja.opt.tibulaUsername; 
+ sql.password=sqlPassword or eja.opt.tibulaPassword;
+ sql.hostname=sqlHostname or eja.opt.tibulaHostname;
+ sql.database=sqlDatabase or eja.opt.tibulaDatabase;
 
- local sqlType=sqlType or eja.opt.sqlType or "maria";
- local sqlUsername=sqlUsername or eja.opt.tibulaUsername; 
- local sqlPassword=sqlPassword or eja.opt.tibulaPassword;
- local sqlHostname=sqlHostname or eja.opt.tibulaHostname;
- local sqlDatabase=sqlDatabase or eja.opt.tibulaDatabase;
-
- tibulaSqlType=sqlType;
+ if not sql.username and not sql.password and not sql.database then
+  sql=ejaJsonDecode(ejaString(ejaFileRead(eja.pathEtc.."eja.tibula.json")));
+ end
  
- if sqlType == "maria" and eja.maria then
+ tibulaSqlEngine=sql.engine or "maria";
+
+ if tibulaSqlEngine == "maria" and eja.maria then
   eja.sql=ejaMaria();
- elseif ejaModuleCheck("luasql."..sqlType) then 
-  if sqlType == "sqlite3" then eja.sql=require "luasql.sqlite3"; end
-  if sqlType == "mysql" then eja.sql=require "luasql.mysql"; end
+ elseif ejaModuleCheck("luasql."..tibulaSqlEngine) then 
+  if tibulaSqlEngine == "sqlite3" then eja.sql=require "luasql.sqlite3"; end
+  if tibulaSqlEngine == "mysql" then eja.sql=require "luasql.mysql"; end
  else
-  ejaError([[[sql] %s library missing]], sqlType);
+  ejaError([[[sql] %s library missing]], tibulaSqlEngine);
   return nil;
  end
 
  if eja.sql then 
-  if sqlType == "maria" then tibulaSqlConnection=ejaMariaOpen(sqlHostname, 3306, sqlUsername, sqlPassword, sqlDatabase); end
-  if sqlType == "mysql" then tibulaSqlConnection=eja.sql.mysql():connect(sqlDatabase, sqlUsername, sqlPassword, sqlHostname); end
-  if sqlType == "sqlite3" then tibulaSqlConnection=eja.sql.sqlite3():connect(sqlDatabase); end
+  if tibulaSqlEngine == "maria" then tibulaSqlConnection=ejaMariaOpen(sql.hostname, 3306, sql.username, sql.password, sql.database); end
+  if tibulaSqlEngine == "mysql" then tibulaSqlConnection=eja.sql.mysql():connect(sql.database, sql.username, sql.password, sql.hostname); end
+  if tibulaSqlEngine == "sqlite3" then tibulaSqlConnection=eja.sql.sqlite3():connect(sql.database); end
  end
 
  if tibulaSqlConnection then 
-  ejaDebug([[[sql] %s connection open]], sqlType);
-  if sqlTable == "maria" or sqlTable== "mysql" then
+  ejaDebug([[[sql] %s connection open]], tibulaSqlEngine);
+  if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then
    tibulaSqlRun([[SET SESSION sql_mode = '';]]);
-   tibulaSqlRun([[DROP TABLE ejaSessions;]]);   
-   tibulaSqlRun([[CREATE TABLE ejaSessions (ejaId integer NOT NULL AUTO_INCREMENT primary key, ejaOwner integer default 0, ejaLog datetime default NULL, name varchar(255) default NULL, value varchar(8192), sub varchar(255) default NULL) ENGINE=MEMORY;]]);     
   end
-  if sqlType == "sqlite3" then
+  if tibulaSqlEngine == "sqlite3" then
    tibulaSqlRun([[PRAGMA journal_mode = MEMORY;]]);
    tibulaSqlRun([[PRAGMA temp_store = MEMORY;]]);
-   if ejaString(sqlPassword) ~= "" then tibulaSqlRun([[PRAGMA key = '%s';]], sqlPassword); end
+   if ejaString(sql.password) ~= "" then tibulaSqlRun([[PRAGMA key = '%s';]], sql.password); end
   end
  else
-  ejaError([[[sql] %s connection error]], sqlType);
+  ejaError([[[sql] %s connection error]], tibulaSqlEngine);
  end
 
  return tibulaSqlConnection;   
@@ -68,11 +70,11 @@ end
 
 
 function tibulaSqlStop()	--stop sql connection
- ejaDebug([[[sql] %s connection closed]], sqlType);
- if tibulaSqlType == "maria" then 
+ ejaDebug([[[sql] %s connection closed]], tibulaSqlEngine);
+ if tibulaSqlEngine == "maria" then 
   return ejaMariaClose(); 
  end
- if tibulaSqlType == "mysql" or tibulaSqlType == "sqlite3" then
+ if tibulaSqlEngine == "mysql" or tibulaSqlEngine == "sqlite3" then
   return tibulaSqlConnection:close(); 
  end
 end
@@ -83,7 +85,7 @@ function tibulaSqlMatrix(query, ...)	--sql multi rows array
 
  local row={}; 
  local rows={};
- if tibulaSqlType == "maria" then
+ if tibulaSqlEngine == "maria" then
   rows=ejaMariaQuery(query);
   local cols={};
   for rk,rv in next,getmetatable(rows) do
@@ -114,7 +116,7 @@ function tibulaSqlArray(query, ...)	--sql last row array
  query=tibulaSqlQuery(query, ...);
  
  local rowLast={};
- if tibulaSqlType == "maria" then
+ if tibulaSqlEngine == "maria" then
   for rk,rv in next,ejaMariaQuery(query) do
    rowLast=rv;
   end
@@ -139,7 +141,7 @@ function tibulaSqlRun(query, ...)	--execute sql command
  query=tibulaSqlQuery(query, ...);
 
  local r=nil;
- if tibulaSqlType == "maria" then
+ if tibulaSqlEngine == "maria" then
   rv=ejaMariaQuery(query);
   if rv then 
    for k,v in next,rv do
@@ -167,8 +169,8 @@ end
 
 
 function tibulaSqlLastId()	--retrieve last inserted row id
- if tibulaSqlType == "sqlite3" then return tibulaSqlRun('SELECT last_insert_rowid();'); end
- if tibulaSqlType == "maria" or tibulaSqlType == "mysql" then 
+ if tibulaSqlEngine == "sqlite3" then return tibulaSqlRun('SELECT last_insert_rowid();'); end
+ if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then 
   return tibulaSqlRun('SELECT LAST_INSERT_ID();'); 
  end
 end
@@ -179,7 +181,7 @@ function tibulaSqlTableCreate(tableName)	--create a new table if it does not exi
  
  if ejaString(tableName) ~= "" and not tibulaSqlRun([[SELECT * FROM %s LIMIT 1;]], tableName) then
   local extra="";
-  if tibulaSqlType == "maria" or tibulaSqlType == "mysql" then extra=" AUTO_INCREMENT "; end  
+  if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then extra=" AUTO_INCREMENT "; end  
   if tibulaSqlRun([[CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);]], tableName, extra) then
    r=1;
   else 
@@ -228,7 +230,7 @@ end
 function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
  local r="";
  
- if tibulaSqlType == "sqlite3" then 
+ if tibulaSqlEngine == "sqlite3" then 
   if ejaNumber(value) > 0 then
    r=tibulaSqlRun([[SELECT datetime(%d, 'unixepoch');]], value);
   else
@@ -236,7 +238,7 @@ function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
   end
  end
  
- if tibulaSqlType == "maria" or tibulaSqlType == "mysql" then 
+ if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then 
   if ejaNumber(value) > 0 then
    r=tibulaSqlRun([[SELECT FROM_UNIXTIME(%d);]], value);
   else
@@ -481,6 +483,9 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
    if rowType == "password" then rowValue="********"; end
   end
   if ejaNumber(v['translate']) > 0 then rowValue=tibulaTranslate(rowValue); end
+  if ejaString(actionType) == "Edit" and rowName == "ejaOwner" and ejaNumber(rowValue) < 1 then
+   rowValue=tibula.ejaOwner;
+  end
   table.insert(a, { name=rowName; type=t; value=rowValue; values=rowArray }); 
  end
 
@@ -937,17 +942,18 @@ end
 
 
 function tibulaSqlModuleImport(a, tableName)	--import a tibula module with fields, commands and permission
+ local a=ejaTable(a);
+ if not a.module then a.module={}; end
  local tableName=tableName or a.name;
  local owner=1;
  local id=tibulaSqlModuleGetIdByName(name);
- local parentId=tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='%s';]], a.module.parentName);
- if ejaNumber(parentId) < 1 then parentId=2; end
+ local parentId=ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='%s';]], ejaString(a.module.parentName)));
  if ejaNumber(a.module.sqlCreated) > 0 then 
   tibulaSqlTableCreate(tableName);
  end
  if ejaNumber(id) < 1 then
-  tibulaSqlRun([[INSERT INTO ejaModules (ejaId, ejaOwner, ejaLog, name, power, searchLimit, lua, sqlCreated, sortList, parentId) VALUES (NULL, %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');]],
-   owner, tibulaSqlNow(), tableName, a.module.power, a.module.searchLimit, a.module.lua, a.module.sqlCreated, a.module.sortList, parentId);
+  tibulaSqlRun([[INSERT INTO ejaModules (ejaId, ejaOwner, ejaLog, name, power, searchLimit, lua, sqlCreated, sortList, parentId) VALUES (NULL, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');]],
+   owner, tibulaSqlNow(), tableName, ejaNumber(a.module.power), ejaNumber(a.module.searchLimit), ejaString(a.module.lua), ejaString(a.module.sqlCreated), ejaString(a.module.sortList), parentId);
   id=tibulaSqlLastId();
  end
  if ejaNumber(id) > 0 then

@@ -155,14 +155,25 @@ function tibulaInstall()
   ejaFileRemove(sqlTmpFile);
   if tibulaSqlStart("maria", user, pass, "localhost", db) then
    ejaInfo("[tibula] database ready");
-   if not ejaFileStat(eja.pathEtc.."/eja.init") then ejaSetup(); end
-   if ejaFileAppend(eja.pathEtc.."/eja.init", ejaSprintf([[
-    --tibula setup
-    eja.opt.tibulaUsername="%s"
-    eja.opt.tibulaPassword="%s"
-    eja.opt.tibulaDatabase="%s"
-    eja.opt.tibulaCron=300
-   ]], user, pass, db)) then
+   if not ejaFileStat(eja.pathEtc.."/eja.init") then 
+    ejaSetup(); 
+    ejaFileWrite(eja.pathEtc.."/eja.init", ejaSprintf([[
+eja.opt.web=1;
+eja.opt.webList=false;     
+eja.opt.webPort=35248;
+eja.opt.webHost="127.0.0.1";
+eja.opt.webPath="/var/eja/web/";
+eja.opt.logFile="/tmp/eja.log";
+eja.opt.logLevel=3;
+eja.opt.tibulaCron=300
+    ]]));
+   end
+   if ejaFileWrite(eja.pathEtc.."/eja.tibula.json", ejaSprintf([[{
+"username" : "%s", 
+"password" : "%s", 
+"database" : "%s" 
+}]], user, pass, db)) then
+    ejaExecute([[chmod 600 %s/eja.tibula.json]], eja.pathEtc);
     ejaWarn("[tibula] eja.init updated, please check");
    end
   else
