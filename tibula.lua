@@ -173,7 +173,7 @@ eja.opt.tibulaCron=300
 "password" : "%s", 
 "database" : "%s" 
 }]], user, pass, db)) then
-    ejaExecute([[chmod 600 %s/eja.tibula.json]], eja.pathEtc);
+    ejaExecute([[chmod 640 %s/eja.tibula.json]], eja.pathEtc);
     ejaWarn("[tibula] eja.init updated, please check");
    end
   else
