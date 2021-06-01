@@ -614,7 +614,7 @@ function tibulaSelectSqlToArray(value)   --convert an sql query to bidimensional
  local ai={};
  local i,z=0,0;
  
- local queryName,queryValue=value:match('^%w+[ ]*(%w+),(%w+)');
+ local queryName,queryValue=value:match('^%w+%s+(%w+)%s*,%s*(%w+)');
  
  for k,v in next,tibulaSqlMatrix(value) do 
   k1,v1=next(v);
