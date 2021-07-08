@@ -169,9 +169,9 @@ end
 
 
 function tibulaSqlLastId()	--retrieve last inserted row id
- if tibulaSqlEngine == "sqlite3" then return tibulaSqlRun('SELECT last_insert_rowid();'); end
+ if tibulaSqlEngine == "sqlite3" then return ejaNumber(tibulaSqlRun('SELECT last_insert_rowid();')); end
  if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then 
-  return tibulaSqlRun('SELECT LAST_INSERT_ID();'); 
+  return ejaNumber(tibulaSqlRun('SELECT LAST_INSERT_ID();')); 
  end
 end
 
@@ -179,7 +179,7 @@ end
 function tibulaSqlTableCreate(tableName)	--create a new table if it does not exist
  local r=0;
  
- if ejaString(tableName) ~= "" and not tibulaSqlRun([[SELECT * FROM %s LIMIT 1;]], tableName) then
+ if tibulaSqlNameCheck(tableName) and not tibulaSqlRun([[SELECT * FROM %s LIMIT 1;]], tableName) then
   local extra="";
   if tibulaSqlEngine == "maria" or tibulaSqlEngine == "mysql" then extra=" AUTO_INCREMENT "; end  
   if tibulaSqlRun([[CREATE TABLE %s (ejaId INTEGER %s PRIMARY KEY, ejaOwner INTEGER, ejaLog DATETIME);]], tableName, extra) then
@@ -197,7 +197,7 @@ function tibulaSqlTableColumnCreate(tableName, columnName, columnType) 	--add a 
  local r=0;   
  local dataType=tibulaSqlTableDataType(columnType);
 
- if ejaString(dataType) ~= "" and not tibulaSqlRun([[SELECT %s FROM %s LIMIT 1;]], columnName, tableName) then
+ if tibulaSqlNameCheck(tableName) and tibulaSqlNameCheck(columnName) and ejaString(dataType) ~= "" and not tibulaSqlRun([[SELECT %s FROM %s LIMIT 1;]], columnName, tableName) then
   if tibulaSqlRun([[ALTER TABLE %s ADD %s %s;]], tableName, columnName, dataType) then
    r=1;
   else
@@ -218,7 +218,7 @@ function tibulaSqlIncludeList(query, ...)   --return a comma separated list of v
   list[#list+1]=v;
  end
  
- return table.concat(list, ",");
+ return ejaString(table.concat(list, ","));
 end
 
 
@@ -234,7 +234,7 @@ function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
   if ejaNumber(value) > 0 then
    r=tibulaSqlRun([[SELECT datetime(%d, 'unixepoch');]], value);
   else
-   r=tibulaSqlRun([[SELECT strftime('%%s', '%s');]], value); 
+   r=tibulaSqlRun([[SELECT strftime('%%s', '%s');]], tibulaSqlEscape(value)); 
   end
  end
  
@@ -242,7 +242,7 @@ function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
   if ejaNumber(value) > 0 then
    r=tibulaSqlRun([[SELECT FROM_UNIXTIME(%d);]], value);
   else
-   r=tibulaSqlRun([[SELECT UNIX_TIMESTAMP('%s');]], value); 
+   r=tibulaSqlRun([[SELECT UNIX_TIMESTAMP('%s');]], tibulaSqlEscape(value)); 
   end
  end
  
@@ -250,8 +250,18 @@ function tibulaSqlUnixTime(value)	--?convert value to unix or sql timestamp
 end
 
 
-function tibulaSqlEscape(data)	--escape data for sql
-  return string.gsub(data, "'", "''");
+function tibulaSqlEscape(data)	--escape data for sql use in column values
+  return ejaString(data):gsub([[\]],[[\\]]):gsub([[']],[[\']]):gsub([["]],[[\"]]):gsub([[\n]],[[\\n]]):gsub([[\0]],[[\\0]]):gsub([[\r]],[[\\r]]):gsub([[`]],[[\`]]);
+end
+
+
+function tibulaSqlNameCheck(name) --check if name is a valid table or column one
+ if ejaString(name) ~= "" and name:match("^[0-9a-zA-Z_]*$") and #name <= 32 then
+  return true;
+ else
+  ejaTrace([[[tibula] table/column name not valid]]);
+  return false;
+ end
 end
 
 
@@ -306,17 +316,28 @@ end
 
 function tibulaSqlOwnerList(ownerId)	--return the allowed id list of owners for active module and ownerId
  local moduleId;
+ local ownerId=ejaNumber(ownerId);
  
  if ejaNumber(tibula.ejaModuleLink) > 0 and ejaNumber(tibula.ejaModuleChange) > 0 then 
   moduleId=tibula.ejaModuleChange; 
  else 
   moduleId=tibula.ejaModuleId; 
  end
- local groupOwners=tibulaSqlIncludeList([[SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d )) AND dstModuleId=%d;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), ownerId, tibulaSqlModuleGetIdByName("ejaModules"), moduleId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers") );
+
  local ownerTree="";
  local sub=ownerId;
  local deep=10;
  local value="0";
+ local groupOwners=tibulaSqlIncludeList([[SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId IN ( SELECT dstFieldId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d )) AND dstModuleId=%d;]], 
+  tibulaSqlModuleGetIdByName("ejaGroups"), 
+  tibulaSqlModuleGetIdByName("ejaGroups"), 
+  tibulaSqlModuleGetIdByName("ejaUsers"), 
+  ownerId, 
+  tibulaSqlModuleGetIdByName("ejaModules"), 
+  ejaNumber(moduleId), 
+  tibulaSqlModuleGetIdByName("ejaGroups"), 
+  tibulaSqlModuleGetIdByName("ejaUsers") 
+ ); 
  while ejaNumber(deep) > 0 do
   deep=deep-1;
   value=tibulaSqlIncludeList([[SELECT ejaId FROM ejaUsers WHERE ejaOwner IN (%s) AND ejaId NOT IN (%s);]], sub, sub);
@@ -347,23 +368,36 @@ function tibulaSqlCommandArray(userId, moduleId, actionType)	--return the power 
  local order=""; 
  local linking="";
  local query="";
+ local userId=ejaNumber(userId);
+ local moduleId=ejaNumber(moduleId);
+ local actionType=ejaString(actionType);
  
  if ejaString(tibula.ejaModuleName) == "ejaLogin" then table.insert(a, "login"); end
  if ejaNumber(tibula.ejaModuleId) == 35248 then table.insert(a, "logout"); end
  if ejaTableCount(tibula.ejaCommandArray) > 0 then
   for k,v in next,tibula.ejaCommandArray do
-   extra=extra.." OR name='"..v.."' ";
+   extra=extra.." OR name='"..tibulaSqlEscape(v).."' ";
    if ejaString(v) == "searchLink" then table.insert(a, "searchLink"); end
   end
  end 
- if ejaString(actionType) ~= "" then order=" ORDER BY power"..actionType.. " ASC";  end
+ if tibulaSqlNameCheck(actionType) then order=" ORDER BY power"..actionType.. " ASC";  end
  if ejaNumber(tibula.ejaLinking) > 0 then linking=" AND linking > 0 ";  end
- query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND ((dstModuleId=%d AND dstFieldId=%d) OR (dstModuleId=%d AND dstFieldId IN (%s))))) %s) %s %s;]], moduleId, tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(userId), extra, linking, order);
+ query=ejaSprintf([[SELECT * FROM ejaCommands WHERE (ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%d AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND ((dstModuleId=%d AND dstFieldId=%d) OR (dstModuleId=%d AND dstFieldId IN (%s))))) %s) %s %s;]], 
+  moduleId, 
+  tibulaSqlModuleGetIdByName("ejaPermissions"), 
+  tibulaSqlModuleGetIdByName("ejaUsers"), 
+  userId, 
+  tibulaSqlModuleGetIdByName("ejaGroups"), 
+  tibulaSqlUserGroupGetList(userId), 
+  extra, 
+  linking, 
+  order
+ );
  for k,v in next,tibulaSqlMatrix(query) do
   local commandName=v['name'];
   if ejaString(tibula.ejaAction) == "view" and ejaString(commandName) == "save" then commandName=""; end
   if ejaString(commandName) ~= "" then
-   if ejaString(actionType) ~= "" then
+   if tibulaSqlNameCheck(actionType) then
     if ejaNumber(v['power'..actionType]) > 0 then table.insert(a, commandName); end
    else 
     table.insert(a, commandName);
@@ -376,6 +410,8 @@ end
 
 
 function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links array
+ local ownerId=ejaNumber(ownerId);
+ local moduleId=ejaNumber(moduleId);
  local row;
  local id=moduleId;
  local a={};
@@ -392,8 +428,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  while id do
   row=tibulaSqlArray([[SELECT ejaId, parentId, name FROM ejaModules WHERE ejaId=%d;]], id);
   id=nil;
-  if ejaTableCount(row) > 0 and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), row.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId)) then
---!!                                tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), row.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers")) then
+  if ejaTableCount(row) > 0 and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), ejaNumber(row.ejaId), ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId) )  then
    table.insert(a.pathId, row.ejaId);
    table.insert(a.pathName, row.name);
    if ejaNumber(row.parentId) > 0 then
@@ -410,7 +445,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  end
  if ejaTableCount(row) > 0 then
   for k,v in next,row do
-   if tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), v.ejaId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId)) then
+   if tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND ((dstFieldId=%d AND dstModuleId=%d) || (dstModuleId=%d AND dstFieldId IN (%s))) LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), ejaNumber(v.ejaId), ownerId, tibulaSqlModuleGetIdByName("ejaUsers"), tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlUserGroupGetList(ownerId)) then
     table.insert(a.treeId, v.ejaId);
     table.insert(a.treeName, v.name);
    end
@@ -419,7 +454,7 @@ function tibulaSqlModuleTree(ownerId, moduleId)	--return path, tree and links ar
  --links
  if ejaNumber(tibula.ejaId) > 0 then
   for k,v in next,tibulaSqlMatrix([[SELECT srcModuleId, (SELECT name FROM ejaModules WHERE ejaId=srcModuleId) AS srcModuleName FROM ejaModuleLinks WHERE dstModuleId=%d ORDER BY power ASC;]], moduleId) do 
-   if (ejaTableCount(tibula.ejaLinkHistory) == 0 or ejaString(tibula.ejaLinkHistory[v.srcModuleId]) == "") and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), v.srcModuleId, ownerId, tibulaSqlModuleGetIdByName("ejaUsers")) then
+   if (ejaTableCount(tibula.ejaLinkHistory) == 0 or ejaString(tibula.ejaLinkHistory[v.srcModuleId]) == "") and tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId IN (SELECT ejaId FROM ejaPermissions WHERE ejaModuleId=%d) AND dstFieldId=%d AND dstModuleId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaPermissions"), ejaNumber(v.srcModuleId), ownerId, tibulaSqlModuleGetIdByName("ejaUsers")) then
     if v.srcModuleName ~= "ejaFiles" then
      table.insert(a.linkId, v.srcModuleId);
      table.insert(a.linkName, v.srcModuleName);
@@ -445,8 +480,15 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
  local a={};
  local t="";
  local matrix=0;
+ local moduleId=ejaNumber(moduleId);
  
- if ejaString(actionType) == "Matrix" then 
+ if tibulaSqlNameCheck(actionType) then
+  actionType=ejaString(actionType);
+ else
+  actionType="";
+ end
+ 
+ if actionType == "Matrix" then 
   actionType="List"; 
   matrix=1; 
  end 
@@ -464,8 +506,8 @@ function tibulaSqlFieldsMatrix(moduleId, actionType) 	--return an array with row
     t=rowType; 
    end
   end
-  if ejaString(v['ejaGroup']) ~= "" and ejaString(tibula.ejaActionType) == "Edit" then	--if there is an ejaGroup then restrict to view only mode
-   if not tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), tibula.ejaOwner, v['ejaGroup']) then
+  if ejaNumber(v['ejaGroup']) > 0 and ejaString(tibula.ejaActionType) == "Edit" then	--if there is an ejaGroup then restrict to view only mode
+   if not tibulaSqlRun([[SELECT ejaId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d AND srcFieldId=%d LIMIT 1;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), ejaNumber(tibula.ejaOwner), v['ejaGroup']) then
     t="view";
    end 
   end
@@ -497,8 +539,10 @@ function tibulaSqlSearchMatrix(query, moduleId) 	--return an associative array f
  local y=0;
  local a={};
  local head={};
+ local query=ejaString(query);
+ local moduleId=ejaNumber(moduleId);
  
- if ejaNumber(moduleId) > 0 then
+ if moduleId > 0 then
   head=tibulaSqlSearchHeader(query, moduleId);
   query=head[1]['query'];
  end
@@ -514,9 +558,9 @@ function tibulaSqlSearchMatrix(query, moduleId) 	--return an associative array f
   setmetatable(a, getmetatable(sql));
  end
  tibula.ejaSqlCountTotal=0;
- local x="";
+ local x=""; --?
  local moduleName=tibulaSqlModuleGetNameById(moduleId);
- if ejaString(moduleName) ~= "" then x=string.find(query, "FROM "..moduleName.." WHERE"); end		--? to replace by regex
+ if tibulaSqlNameCheck(moduleName) then x=string.find(query, "FROM "..moduleName.." WHERE"); end		--? to replace by regex
  if x then
   local queryCountFrom=string.sub(query, x, -1);
   local queryCount=ejaSprintf([[SELECT COUNT(*) %s;]], queryCountFrom);
@@ -538,9 +582,11 @@ end
 
 function tibulaSqlSearchHeader(query, moduleId) 	--return an associative array with the possible values for each columns and the "right" query to execute. 
  local a={};
+ local query=ejaString(query);
+ local moduleId=ejaNumber(moduleId);
 
- if ejaNumber(moduleId) > 0 then
-  for k,v in next,tibulaSqlMatrix([[SELECT * FROM ejaFields WHERE ejaModuleId='%s' AND powerList!='' AND powerList>0 ORDER BY powerList;]], moduleId) do
+ if moduleId > 0 then
+  for k,v in next,tibulaSqlMatrix([[SELECT * FROM ejaFields WHERE ejaModuleId=%d AND powerList!='' AND powerList>0 ORDER BY powerList;]], moduleId) do
    local rowType=ejaString(v['type']);
    a[v['name']]={};
    if rowType == "boolean" then 
@@ -665,18 +711,23 @@ end
 
 
 function tibulaSqlModuleGetNameById(id) 
- return tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d;]], id) or "";
+ return ejaString(tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d;]], ejaNumber(id)));
 end
 
 
 function tibulaSqlModuleGetIdByName(name) 
- return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='%s';]], ejaString(name)));
+ if tibulaSqlNameCheck(name) then
+  return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='%s';]], name));
+ else
+  return 0;
+ end
 end
 
 
 function tibulaSqlModuleDel(tableId, ownerList)
- local tableName=tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d AND ejaOwner IN (%s);]], tableId, ownerList);
- if ejaString(tableName) ~= "" then
+ local tableId=ejaNumber(tableId);
+ local tableName=tibulaSqlRun([[SELECT name FROM ejaModules WHERE ejaId=%d AND ejaOwner IN (%s);]], tableId, tibulaSqlEscape(ownerList));
+ if tibulaSqlNameCheck(tableName) then
   tibulaSqlRun([[DROP TABLE %s;]], tableName);
   tibulaSqlRun([[DELETE FROM ejaFields WHERE ejaModuleId=%d;]], tableId);
   tibulaSqlRun([[DELETE FROM ejaPermissions WHERE ejaModuleId=%d;]], tableId);
@@ -691,81 +742,82 @@ end
 
 
 function tibulaSqlLinkGetPower(srcModule, srcField, dstModule, dstField)
- return tibulaSqlArray([[SELECT ejaId, power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;]], srcModule, srcField, dstModule, dstField);
+ return tibulaSqlArray([[SELECT ejaId, power FROM ejaLinks WHERE srcModuleId=%d AND srcFieldId=%d AND dstModuleId=%d AND dstFieldId=%d;]], ejaNumber(srcModule), ejaNumber(srcField), ejaNumber(dstModule), ejaNumber(dstField));
 end
 
 
 function tibulaSqlLinkSetPower(power, id, ownerList)
- return tibulaSqlRun([[UPDATE ejaLinks SET power=%d WHERE ejaId=%d AND ejaOwner IN (%s);]], ejaNumber(power), ejaNumber(id), ownerList);
+ return tibulaSqlRun([[UPDATE ejaLinks SET power=%d WHERE ejaId=%d AND ejaOwner IN (%s);]], ejaNumber(power), ejaNumber(id), tibulaSqlEscape(ownerList));
 end
 
 
 function tibulaSqlLinkAdd(userId, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power)
- return tibulaSqlRun([[INSERT INTO ejaLinks (ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');]], userId, tibulaSqlNow(), srcModuleId, srcFieldId, dstModuleId, dstFieldId, power);
+ return tibulaSqlRun([[INSERT INTO ejaLinks (ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) VALUES (%d, '%s', %d, %d, %d, %d, '%s');]], ejaNumber(userId), tibulaSqlNow(), ejaNumber(srcModuleId), ejaNumber(srcFieldId), ejaNumber(dstModuleId), ejaNumber(dstFieldId), tibulaSqlEscape(power));
 end
 
 
 function tibulaSqlLinkDel(id, ownerList) 
- return tibulaSqlRun([[DELETE FROM ejaLinks WHERE ejaId=%d AND ejaOwner IN (%s);]], ejaNumber(id), ownerList);
+ return tibulaSqlRun([[DELETE FROM ejaLinks WHERE ejaId=%d AND ejaOwner IN (%s);]], ejaNumber(id), tibulaSqlEscape(ownerList));
 end
 
 
 function tibulaSqlLinkCopy(userId, dstFieldNew, dstModule, dstFieldOriginal)
- return  tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, %d, '%s', srcModuleId, srcFieldId, dstModuleId, %d, power FROM ejaLinks WHERE dstModuleId=%d AND dstFieldId=%d;]], userId, tibulaSqlNow(), dstFieldNew, dstModule, dstFieldOriginal);
+ return tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, %d, '%s', srcModuleId, srcFieldId, dstModuleId, %d, power FROM ejaLinks WHERE dstModuleId=%d AND dstFieldId=%d;]], ejaNumber(userId), tibulaSqlNow(), ejaNumber(dstFieldNew), ejaNumber(dstModule), ejaNumber(dstFieldOriginal));
 end
 
 
 function tibulaSqlModuleLinkGetSrcField(dstModule, srcModule)
- return tibulaSqlRun([[SELECT srcFieldName FROM ejaModuleLinks WHERE dstModuleId=%d AND srcModuleId=%d;]], dstModule, srcModule);
+ return ejaString(tibulaSqlRun([[SELECT srcFieldName FROM ejaModuleLinks WHERE dstModuleId=%d AND srcModuleId=%d;]], ejaNumber(dstModule), ejaNumber(srcModule)));
 end
 
+
 function tibulaSqlHelpGetText(moduleId, actionType, language) 
- return tibulaSqlRun([[SELECT text FROM ejaHelps WHERE (ejaModuleId=0 OR ejaModuleId=%d) AND (actionType='%s' OR actionType='') AND ejaLanguage='%s' ORDER BY actionType DESC, ejaModuleId DESC LIMIT 1;]], moduleId, actionType, language) or "";
+ return ejaString(tibulaSqlRun([[SELECT text FROM ejaHelps WHERE (ejaModuleId=0 OR ejaModuleId=%d) AND (actionType='%s' OR actionType='') AND ejaLanguage='%s' ORDER BY actionType DESC, ejaModuleId DESC LIMIT 1;]], ejaNumber(moduleId), tibulaSqlEscape(actionType), tibulaSqlEscape(language)));
 end
 
 
 function tibulaSqlUserGetIdByUsername(username)
- return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' LIMIT 1;]], username));
+ return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' LIMIT 1;]], ejaString(username)));
 end
 
 
 function tibulaSqlUserGetIdByUserAndPass(username, password)
- return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' AND CASE WHEN LENGTH(password) = 64 THEN password='%s' ELSE password='%s' END;]], username, ejaSha256(password), password));
+ return ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaUsers WHERE username='%s' AND CASE WHEN LENGTH(password) = 64 THEN password='%s' ELSE password='%s' END;]], tibulaSqlEscape(username), ejaSha256(password), tibulaSqlEscape(password)));
 end
 
 
 function tibulaSqlSessionResetByUserId(userId)
- return tibulaSqlRun([[DELETE FROM ejaSessions WHERE ejaOwner=%d;]], userId);
+ return tibulaSqlRun([[DELETE FROM ejaSessions WHERE ejaOwner=%d;]], ejaNumber(userId));
 end
 
 
 function tibulaSqlUserSessionUpdate(session, userId);
- return tibulaSqlRun([[UPDATE ejaUsers SET ejaSession='%s' WHERE ejaId='%d';]], session, userId); 
+ return tibulaSqlRun([[UPDATE ejaUsers SET ejaSession='%s' WHERE ejaId=%d;]], tibulaSqlEscape(session), ejaNumber(userId)); 
 end
 
 
 function tibulaSqlUserGetAllById(userId)
- return tibulaSqlArray([[SELECT * FROM ejaUsers WHERE ejaId=%d;]], userId);
+ return tibulaSqlArray([[SELECT * FROM ejaUsers WHERE ejaId=%d;]], ejaNumber(userId));
 end
 
 
 function tibulaSqlUserGetAllBySession(session)
- return tibulaSqlArray([[SELECT * FROM ejaUsers WHERE ejaSession='%s';]], session);
+ return tibulaSqlArray([[SELECT * FROM ejaUsers WHERE ejaSession='%s';]], tibulaSqlEscape(session));
 end
 
 
 function tibulaSqlUserSessionReset(userId)
- return tibulaSqlRun([[UPDATE ejaUsers SET ejaSession='' WHERE ejaId=%d;]], userId);
+ return tibulaSqlRun([[UPDATE ejaUsers SET ejaSession='' WHERE ejaId=%d;]], ejaNumber(userId));
 end
 
 
 function tibulaSqlUserPermissionCopy(userId, moduleId)
- return tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, 1, '%s', %d, ejaId, %d, %d, 2 from ejaPermissions where ejaModuleId=%d;]], tibulaSqlNow(), tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), userId, moduleId);
+ return tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) SELECT NULL, 1, '%s', %d, ejaId, %d, %d, 2 from ejaPermissions where ejaModuleId=%d;]], tibulaSqlNow(), tibulaSqlModuleGetIdByName("ejaPermissions"), tibulaSqlModuleGetIdByName("ejaUsers"), ejaNumber(userId), ejaNumber(moduleId));
 end
 
 function tibulaSqlUserGroupGetList(userId)
  local r=tibulaSqlIncludeList([[SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d;]], tibulaSqlModuleGetIdByName("ejaGroups"), tibulaSqlModuleGetIdByName("ejaUsers"), ejaNumber(userId));
- if ejaString(r) == "" then 
+ if r == "" then 
   return "0";
  else
   return r;
@@ -774,28 +826,40 @@ end
 
 
 function tibulaSqlTableNew(tableName, userId, tableId)
- local tableId=tableId or "NULL";
- tibulaSqlRun([[INSERT INTO %s (ejaId, ejaOwner, ejaLog) VALUES (%s, '%d', '%s');]], tableName, tableId, userId, tibulaSqlNow());
- return ejaNumber(tibulaSqlLastId());
+ if tibulaSqlNameCheck(tableName) and ejaNumber(userId) > 0 then
+  if ejaNumber(tableId) == 0 then tableId="NULL"; end
+  tibulaSqlRun([[INSERT INTO %s (ejaId, ejaOwner, ejaLog) VALUES (%s, %d, '%s');]], tableName, tableId, userId, tibulaSqlNow());
+  return tibulaSqlLastId();
+ else
+  return 0;
+ end
 end
 
 
 function tibulaSqlTableUpdateById(tableName, colName, colValue, id, ownerList)
- tibulaSqlRun([[UPDATE %s SET %s='%s' WHERE ejaId=%d AND ejaOwner IN (%s);]], tableName, colName, tibulaSqlEscape(colValue), id, ownerList);
+ if tibulaSqlNameCheck(tableName) and tibulaSqlNameCheck(colName) then
+  return tibulaSqlRun([[UPDATE %s SET %s='%s' WHERE ejaId=%d AND ejaOwner IN (%s);]], tableName, colName, tibulaSqlEscape(colValue), ejaNumber(id), tibulaSqlEscape(ownerList));
+ else
+  return false;
+ end
 end
 
 
 function tibulaSqlTableGetAllById(tableName, tableId)
- return tibulaSqlArray([[SELECT * FROM %s WHERE ejaId=%d;]], tableName, tableId);
+ if tibulaSqlNameCheck(tableName) then
+  return tibulaSqlArray([[SELECT * FROM %s WHERE ejaId=%d;]], tableName, ejaNumber(tableId));
+ else
+  return {};
+ end
 end
 
 
 function tibulaSqlTableDelete(tableName, tableId, ownerList)
- local moduleId=tibulaSqlModuleGetIdByName(tableName);
- if ejaNumber(tableId) > 0 then
-  tibulaSqlRun([[DELETE FROM %s WHERE ejaId=%d AND ejaOwner IN (%s);]], tableName, tableId, ownerList); 
-  tibulaSqlRun([[DELETE FROM ejaLinks WHERE (dstModuleId=%d AND dstFieldId=%d) OR (srcModuleId=%d AND srcFieldId=%d) AND ejaOwner IN (%s);]], moduleId, tableId, moduleId, tableId, ownerList);
-  return true;
+ if tibulaSqlNameCheck(tableName) and ejaNumber(tableId) > 0 then
+  local moduleId=tibulaSqlModuleGetIdByName(tableName);
+  tibulaSqlRun([[DELETE FROM %s WHERE ejaId=%d AND ejaOwner IN (%s);]], tableName, tableId, tibulaSqlEscape(ownerList)); 
+  tibulaSqlRun([[DELETE FROM ejaLinks WHERE (dstModuleId=%d AND dstFieldId=%d) OR (srcModuleId=%d AND srcFieldId=%d) AND ejaOwner IN (%s);]], moduleId, tableId, moduleId, tableId, tibulaSqlEscape(ownerList));
+  return true
  else
   return false;
  end
@@ -803,73 +867,75 @@ end
 
 
 function tibulaSqlPermissionCount(moduleId)
- return ejaNumber(tibulaSqlRun([[SELECT COUNT(*) FROM ejaPermissions WHERE ejaModuleId=%d;]], moduleId));
+ return ejaNumber(tibulaSqlRun([[SELECT COUNT(*) FROM ejaPermissions WHERE ejaModuleId=%d;]], ejaNumber(moduleId)));
 end
 
 
 function tibulaSqlPermissionAdd(userId, moduleId, commandName)
- return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE name='%s';]], userId, tibulaSqlNow(), moduleId, commandName);
+ return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE name='%s';]], ejaNumber(userId), tibulaSqlNow(), ejaNumber(moduleId), tibulaSqlEscape(commandName));
 end
 
 
 function tibulaSqlPermissionAddDefault(userId, moduleId)
- return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE defaultCommand>0;]], userId, tibulaSqlNow(), moduleId);
+ return tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) SELECT NULL, %d, '%s', %d, ejaId FROM ejaCommands WHERE defaultCommand>0;]], ejaNumber(userId), tibulaSqlNow(), ejaNumber(moduleId));
 end
 
 
 function tibulaSqlFieldType(moduleId, fieldName) 
- return tibulaSqlRun([[SELECT type FROM ejaFields WHERE ejaModuleId=%d AND name='%s';]], moduleId, fieldName);
+ return ejaString(tibulaSqlRun([[SELECT type FROM ejaFields WHERE ejaModuleId=%d AND name='%s';]], ejaNumber(moduleId), tibulaSqlEscape(fieldName)));
 end
 
 
 function tibulaSqlTranslateMatrix(moduleId, language)	--must be ORDER ASC to overwrite general translation with module one
- return tibulaSqlMatrix([[SELECT * FROM ejaTranslations where ejaLanguage='%s' AND (ejaModuleId=0 OR ejaModuleId='' OR ejaModuleId=%d) ORDER BY ejaModuleId ASC;]], language, moduleId);
+ return tibulaSqlMatrix([[SELECT * FROM ejaTranslations where ejaLanguage='%s' AND (ejaModuleId=0 OR ejaModuleId='' OR ejaModuleId=%d) ORDER BY ejaModuleId ASC;]], tibulaSqlEscape(language), ejaNumber(moduleId));
 end
 
 function tibulaSqlSearchQuery(tableName, valueArray, ownerList)
- local sqlType={};
  local sql={};
- local moduleId=tibulaSqlModuleGetIdByName(tableName);
- sql[#sql+1]="SELECT ejaId";
- for k,v in next,tibulaSqlMatrix([[SELECT * FROM ejaFields WHERE ejaModuleId=%d ORDER BY powerList;]], moduleId) do
-  if ejaNumber(v.powerList) > 0 then
-   sql[#sql+1]=',';
-   sql[#sql+1]=v.name;
+ if tibulaSqlNameCheck(tableName) then
+  local sqlType={};
+  local moduleId=tibulaSqlModuleGetIdByName(tableName);
+  sql[#sql+1]="SELECT ejaId";
+  for k,v in next,tibulaSqlMatrix([[SELECT * FROM ejaFields WHERE ejaModuleId=%d ORDER BY powerList;]], ejaNumber(moduleId)) do
+   if ejaNumber(v.powerList) > 0 then
+    sql[#sql+1]=',';
+    sql[#sql+1]=v.name;
+   end
+   sqlType[v.name]=v.type;
   end
-  sqlType[v.name]=v.type;
- end
- sql[#sql+1]=ejaSprintf([[ FROM %s WHERE ejaOwner IN (%s) ]], tableName, ownerList);
- for k,v in next,valueArray do
-  local sqlTypeThis=ejaString(sqlType[k]);
-  if ejaString(v) ~= "" and not string.find(k, "%.") then 
-   local sqlAnd="";
-   v=string.gsub(v, "*", "%%");
-   v=string.gsub(v, "%%", "%%%%%%%%");
-   if sqlTypeThis == "boolean" or sqlTypeThis == "integer" then 
-    local s=ejaString(v);
-    if s:sub(1,1) == ">" then
-     sqlAnd=ejaSprintf(' AND %s > %d ', k, ejaNumber(s:sub(2)));
-    elseif s:sub(1,1) == "<" then
-     sqlAnd=ejaSprintf(' AND %s < %d ', k, ejaNumber(s:sub(2)));
-    else
-     sqlAnd=ejaSprintf(' AND %s = %d ', k, ejaNumber(v)); 
+  sql[#sql+1]=ejaSprintf([[ FROM %s WHERE ejaOwner IN (%s) ]], tableName, tibulaSqlEscape(ownerList));
+  for k,v in next,valueArray do
+   local sqlTypeThis=ejaString(sqlType[k]);
+   if tibulaSqlNameCheck(k) and ejaString(v) ~= "" and not string.find(k, "%.") then 
+    local sqlAnd="";
+    v=string.gsub(v, "*", "%%");
+    v=string.gsub(v, "%%", "%%%%%%%%");
+    if sqlTypeThis == "boolean" or sqlTypeThis == "integer" then 
+     local s=ejaString(v);
+     if s:sub(1,1) == ">" then
+      sqlAnd=ejaSprintf(' AND %s > %d ', k, ejaNumber(s:sub(2)));
+     elseif s:sub(1,1) == "<" then
+      sqlAnd=ejaSprintf(' AND %s < %d ', k, ejaNumber(s:sub(2)));
+     else
+      sqlAnd=ejaSprintf(' AND %s = %d ', k, ejaNumber(v)); 
+     end
     end
-   end
-   if sqlTypeThis == "date" or sqlTypeThis == "time" or sqlTypeThis == "datetime" then 
-    sqlAnd=ejaSprintf([[ AND %s='%s' ]], k, tibulaDateSet(v, sqlTypeThis)); 
-   end
-   if sqlTypeThis == "dateRange" or sqlTypeThis == "timeRange" or sqlTypeThis == "datetimeRange" or sqlTypeThis == "integerRange" then
-    if ejaString(valueArray[k..".begin"]) ~= "" then 
-     sqlAnd=sqlAnd..ejaSprintf([[ AND %s > '%s' ]], k, tibulaDateSet(valueArray[k..".begin"], "")); 
+    if sqlTypeThis == "date" or sqlTypeThis == "time" or sqlTypeThis == "datetime" then 
+     sqlAnd=ejaSprintf([[ AND %s='%s' ]], k, tibulaDateSet(v, sqlTypeThis)); 
     end
-    if ejaString(valueArray[k..".end"]) ~= "" then 
-     sqlAnd=sqlAnd..ejaSprintf([[ AND %s < '%s' ]], k, tibulaDateSet(valueArray[k..".end"], "")); 
+    if sqlTypeThis == "dateRange" or sqlTypeThis == "timeRange" or sqlTypeThis == "datetimeRange" or sqlTypeThis == "integerRange" then
+     if ejaString(valueArray[k..".begin"]) ~= "" then 
+      sqlAnd=sqlAnd..ejaSprintf([[ AND %s > '%s' ]], k, tibulaDateSet(valueArray[k..".begin"], "")); 
+     end
+     if ejaString(valueArray[k..".end"]) ~= "" then 
+      sqlAnd=sqlAnd..ejaSprintf([[ AND %s < '%s' ]], k, tibulaDateSet(valueArray[k..".end"], "")); 
+     end
     end
+    if ejaString(sqlAnd) == "" then 
+     sqlAnd=ejaSprintf([[ AND %s LIKE '%s' ]], k, tibulaSqlEscape(v));
+    end 
+    sql[#sql+1]=sqlAnd;
    end
-   if ejaString(sqlAnd) == "" then 
-    sqlAnd=ejaSprintf([[ AND %s LIKE '%s' ]], k, v);
-   end
-   sql[#sql+1]=sqlAnd;
   end
  end
  return table.concat(sql);
@@ -877,17 +943,25 @@ end
 
 
 function tibulaSqlSearchQueryLink(tableName, linkFieldName, linkFieldId, linkModuleId, ownerList)
- local moduleId=tibulaSqlModuleGetIdByName(tableName);
- if ejaString(linkFieldName) ~= "" then
-  return ejaSprintf([[ AND ejaId IN (SELECT ejaId FROM %s WHERE %s=%d AND ejaOwner IN (%s)) ]], tableName, linkFieldName, linkFieldId, ownerList);
- else
-  return ejaSprintf([[ AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d) ]], moduleId, linkModuleId, linkFieldId); 
+ if tibulaSqlNameCheck(tableName) then
+  if ejaString(linkFieldName) ~= "" then
+   if tibulaSqlNameCheck(linkFieldName) then
+    return ejaSprintf([[ AND ejaId IN (SELECT ejaId FROM %s WHERE %s=%d AND ejaOwner IN (%s)) ]], tableName, linkFieldName, ejaNumber(linkFieldId), tibulaSqlEscape(ownerList));
+   end
+  else
+   return ejaSprintf([[ AND ejaId IN (SELECT srcFieldId FROM ejaLinks WHERE srcModuleId=%d AND dstModuleId=%d AND dstFieldId=%d) ]], tibulaSqlModuleGetIdByName(tableName), ejaNumber(linkModuleId), ejaNumber(linkFieldId)); 
+  end
  end
+ return "";
 end
 
 
 function tibulaSqlSearchQueryOrderAndLimit(order, limit, step)
- return ejaSprintf([[ ORDER BY %s LIMIT %d, %d;]], order, limit, step);
+ if tibulaSqlNameCheck(order) then
+  return ejaSprintf([[ ORDER BY %s LIMIT %d, %d;]], order, ejaNumber(limit), ejaNumber(step));
+ else
+  return "";
+ end
 end
 
 
@@ -913,11 +987,11 @@ function tibulaSqlSessionWrite(ownerId, values)	--write the ejaSession array
    if type(v) == "table" then
     for kk,vv in next,v do
      if type(vv) ~= "table" then
-      tibulaSqlRun([[INSERT INTO ejaSessions (ejaLog, ejaOwner, name, sub, value) VALUES ('%s', %d, '%s', '%s', '%s');]], tibulaSqlNow(), ownerId, k, kk, vv);
+      tibulaSqlRun([[INSERT INTO ejaSessions (ejaLog, ejaOwner, name, sub, value) VALUES ('%s', %d, '%s', '%s', '%s');]], tibulaSqlNow(), ownerId, tibulaSqlEscape(k), tibulaSqlEscape(kk), tibulaSqlEscape(vv));
      end
     end
    else
-    tibulaSqlRun([[INSERT INTO ejaSessions (ejaLog, ejaOwner, name, value) VALUES ("%s", %d, "%s", "%s");]], tibulaSqlNow(), ownerId, k, v); 
+    tibulaSqlRun([[INSERT INTO ejaSessions (ejaLog, ejaOwner, name, value) VALUES ("%s", %d, "%s", "%s");]], tibulaSqlNow(), ownerId, tibulaSqlEscape(k), tibulaSqlEscape(v)); 
    end
   end
  else
@@ -928,61 +1002,64 @@ end
 
 function tibulaSqlModuleExport(name)   --export a tibula module with fields and commands
  local a={};
- local id=tibulaSqlModuleGetIdByName(name);
- a.name=name;
- a.module=tibulaSqlArray([[SELECT a.searchLimit, a.sqlCreated, a.power, a.sortList, a.lua, (SELECT x.name FROM ejaModules AS x WHERE x.ejaId=a.parentId) AS parentName FROM ejaModules AS a WHERE ejaId=%s;]], id);
- a.field=tibulaSqlMatrix([[SELECT translate, matrixUpdate, powerEdit, name, type, powerList, powerSearch, value FROM ejaFields WHERE ejaModuleId=%s;]], id);
- a.translation=tibulaSqlMatrix([[SELECT ejaLanguage, word, translation, (SELECT ejaModules.name FROM ejaModules WHERE ejaModules.ejaId=ejaModuleId) AS ejaModuleName FROM ejaTranslations WHERE ejaModuleId=%s OR word='%s';]], id, name);
- a.command={};
- for _,row in next,tibulaSqlMatrix([[SELECT name from ejaCommands WHERE ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%s);]], id) do
-  a.command[#a.command+1]=row.name;
+ if tibulaSqlNameCheck(name) then
+  local id=tibulaSqlModuleGetIdByName(name);
+  a.name=name;
+  a.module=tibulaSqlArray([[SELECT a.searchLimit, a.sqlCreated, a.power, a.sortList, a.lua, (SELECT x.name FROM ejaModules AS x WHERE x.ejaId=a.parentId) AS parentName FROM ejaModules AS a WHERE ejaId=%s;]], id);
+  a.field=tibulaSqlMatrix([[SELECT translate, matrixUpdate, powerEdit, name, type, powerList, powerSearch, value FROM ejaFields WHERE ejaModuleId=%s;]], id);
+  a.translation=tibulaSqlMatrix([[SELECT ejaLanguage, word, translation, (SELECT ejaModules.name FROM ejaModules WHERE ejaModules.ejaId=ejaModuleId) AS ejaModuleName FROM ejaTranslations WHERE ejaModuleId=%s OR word='%s';]], id, name);
+  a.command={};
+  for _,row in next,tibulaSqlMatrix([[SELECT name from ejaCommands WHERE ejaId IN (SELECT ejaCommandId FROM ejaPermissions WHERE ejaModuleId=%s);]], id) do
+   a.command[#a.command+1]=row.name;
+  end
  end
  return a;
 end
 
 
 function tibulaSqlModuleImport(a, tableName)	--import a tibula module with fields, commands and permission
+ local id=nil;
  local a=ejaTable(a);
- if not a.module then a.module={}; end
- local tableName=tableName or a.name;
- local owner=1;
- local id=tibulaSqlModuleGetIdByName(name);
- local parentId=ejaNumber(tibulaSqlRun([[SELECT ejaId FROM ejaModules WHERE name='%s';]], ejaString(a.module.parentName)));
- if ejaNumber(a.module.sqlCreated) > 0 then 
-  tibulaSqlTableCreate(tableName);
- end
- if ejaNumber(id) < 1 then
-  tibulaSqlRun([[INSERT INTO ejaModules (ejaId, ejaOwner, ejaLog, name, power, searchLimit, lua, sqlCreated, sortList, parentId) VALUES (NULL, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');]],
-   owner, tibulaSqlNow(), tableName, ejaNumber(a.module.power), ejaNumber(a.module.searchLimit), ejaString(a.module.lua), ejaString(a.module.sqlCreated), ejaString(a.module.sortList), parentId);
-  id=tibulaSqlLastId();
- end
- if ejaNumber(id) > 0 then
-  tibulaSqlRun([[DELETE FROM ejaFields WHERE ejaModuleId=%s;]], id);
-  for k,v in next,a.field do
-   if ejaNumber(a.module.sqlCreated) > 0 then
-    tibulaSqlTableColumnCreate(tableName, v.name, v.type);
+ local tableName=tableName or a.name; 
+ if tibulaSqlNameCheck(tableName) then
+  if not a.module then a.module={}; end
+  local owner=1;
+  local id=tibulaSqlModuleGetIdByName(name);
+  local parentId=tibulaSqlModuleGetIdByName(a.module.parentName);
+  if ejaNumber(a.module.sqlCreated) > 0 then 
+   tibulaSqlTableCreate(tableName);
+  end
+  if id < 1 then
+   tibulaSqlRun([[INSERT INTO ejaModules (ejaId, ejaOwner, ejaLog, name, power, searchLimit, lua, sqlCreated, sortList, parentId) VALUES (NULL, %d, '%s', '%s', %d, %d, '%s', %d, '%s', %d);]],
+   owner, tibulaSqlNow(), tableName, ejaNumber(a.module.power), ejaNumber(a.module.searchLimit), tibulaSqlEscape(a.module.lua), ejaNumber(a.module.sqlCreated), tibulaSqlEscape(a.module.sortList), parentId);
+   id=tibulaSqlLastId();
+  end
+  if id > 0 then
+   tibulaSqlRun([[DELETE FROM ejaFields WHERE ejaModuleId=%d;]], id);
+   for k,v in next,a.field do
+    if ejaNumber(a.module.sqlCreated) > 0 then
+     tibulaSqlTableColumnCreate(tableName, v.name, v.type);
+    end
+    tibulaSqlRun([[INSERT INTO ejaFields (ejaId, ejaOwner, ejaLog, ejaModuleId, name, type, value, translate, matrixUpdate, powerSearch, powerList, powerEdit) VALUES (NULL, %d, '%s', %d, '%s', '%s', '%s', '%s', %d, %d, %d, %d);]],
+     owner, tibulaSqlNow(), id, tibulaSqlEscape(v.name), tibulaSqlEscape(v.type), tibulaSqlEscape(v.value), tibulaSqlEscape(v.translate), ejaNumber(v.matrixUpdate), ejaNumber(v.powerSearch), ejaNumber(v.powerList), ejaNumber(v.powerEdit));
    end
-   tibulaSqlRun([[INSERT INTO ejaFields (ejaId, ejaOwner, ejaLog, ejaModuleId, name, type, value, translate, matrixUpdate, powerSearch, powerList, powerEdit) VALUES (NULL, %s, '%s', %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');]],
-    owner, tibulaSqlNow(), id, v.name, v.type, v.value, v.translate, v.matrixUpdate, v.powerSearch, v.powerList, v.powerEdit);
-  end
-  local src=tibulaSqlModuleGetIdByName("ejaPermissions");
-  local dst=tibulaSqlModuleGetIdByName("ejaUsers"); 
-  tibulaSqlRun([[DELETE FROM ejaLinks WHERE dstModuleId=%s AND srcModuleId=%s AND srcFieldId IN (SELECT c.ejaId FROM ejaPermissions AS c WHERE c.ejaModuleId=%s);]], dst, src, id);
-  tibulaSqlRun([[DELETE FROM ejaPermissions WHERE ejaModuleId=%s;]], id);
-  for k,v in next,a.command do
-   tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) VALUES (NULL, %s, '%s', %s, (SELECT x.ejaId FROM ejaCommands AS x WHERE x.name='%s' LIMIT 1));]], owner, tibulaSqlNow(), id, v)
-   tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) VALUES (NULL, %s, '%s', '%s', '%s', '%s', '%s', 1);]], 
-    owner, tibulaSqlNow(), src, tibulaSqlLastId(), dst, owner);     
-  end
-  tibulaSqlRun([[DELETE FROM ejaTranslations WHERE ejaModuleId=%d;]], id);
-  tibulaSqlRun([[DELETE FROM ejaTranslations WHERE word='%s' AND ejaModuleId < 1;]], tableName);
-  for _,row in next,a.translation do
-   local tmpId=id;
-   if ejaString(row.ejaModuleName) ~= tableName then tmpId=0 end
-   tibulaSqlRun([[INSERT INTO ejaTranslations (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaLanguage, word, translation) VALUES (NULL, %s, '%s', '%s', '%s', '%s', '%s');]], owner, tibulaSqlNow(), tmpId, row.ejaLanguage, row.word, row.translation);
+   local src=tibulaSqlModuleGetIdByName("ejaPermissions");
+   local dst=tibulaSqlModuleGetIdByName("ejaUsers"); 
+   tibulaSqlRun([[DELETE FROM ejaLinks WHERE dstModuleId=%d AND srcModuleId=%d AND srcFieldId IN (SELECT c.ejaId FROM ejaPermissions AS c WHERE c.ejaModuleId=%d);]], dst, src, id);
+   tibulaSqlRun([[DELETE FROM ejaPermissions WHERE ejaModuleId=%d;]], id);
+   for k,v in next,a.command do
+    tibulaSqlRun([[INSERT INTO ejaPermissions (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaCommandId) VALUES (NULL, %d, '%s', %d, (SELECT x.ejaId FROM ejaCommands AS x WHERE x.name='%s' LIMIT 1));]], owner, tibulaSqlNow(), id, tibulaSqlEscape(v))
+    tibulaSqlRun([[INSERT INTO ejaLinks (ejaId, ejaOwner, ejaLog, srcModuleId, srcFieldId, dstModuleId, dstFieldId, power) VALUES (NULL, %d, '%s', %d, %d, %d, %d, 1);]], 
+     owner, tibulaSqlNow(), src, tibulaSqlLastId(), dst, owner);     
+   end
+   tibulaSqlRun([[DELETE FROM ejaTranslations WHERE ejaModuleId=%d;]], id);
+   tibulaSqlRun([[DELETE FROM ejaTranslations WHERE word='%s' AND ejaModuleId < 1;]], tibulaSqlEscape(tableName));
+   for _,row in next,a.translation do
+    local tmpId=id;
+    if ejaString(row.ejaModuleName) ~= tableName then tmpId=0 end
+    tibulaSqlRun([[INSERT INTO ejaTranslations (ejaId, ejaOwner, ejaLog, ejaModuleId, ejaLanguage, word, translation) VALUES (NULL, %d, '%s', %d, '%s', '%s', '%s');]], owner, tibulaSqlNow(), tmpId, tibulaSqlEscape(row.ejaLanguage), tibulaSqlEscape(row.word), tibulaSqlEscape(row.translation));
+   end
   end
  end
- return id;
+ return id; 
 end
-
-

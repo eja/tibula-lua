@@ -99,8 +99,7 @@ function tibulaDateSet(value, type)		--convert datetime to dd/mm/yyyy or vicever
  if not string.find(type, "time") then 
   value=string.sub(value, 1, 10);
  end
- 
- return value;
+ return ejaString(value:match("^([0-9%-% %:]*)$"));
 end
 
 
