@@ -957,7 +957,7 @@ end
 
 
 function tibulaSqlSearchQueryOrderAndLimit(order, limit, step)
- if tibulaSqlNameCheck(order) then
+ if tibulaSqlNameCheck(order:gsub("[,|%s]","")) then
   return ejaSprintf([[ ORDER BY %s LIMIT %d, %d;]], order, ejaNumber(limit), ejaNumber(step));
  else
   return "";
