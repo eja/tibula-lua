@@ -1,4 +1,4 @@
--- Copyright (C) 2007-2021 by Ubaldo Porcheddu <ubaldo@eja.it>
+-- Copyright (C) 2007-2022 by Ubaldo Porcheddu <ubaldo@eja.it>
 --
 -- Magyar rapszódiák
 
@@ -24,7 +24,7 @@ end
 function tibulaXhtmlHeader() 	--return xhtml header and open form
  local o={};
 
- local script=eja.opt.tibulaScript or "https://cdn.tibula.net/tibula.js";
+ local script=eja.opt.tibulaScript or "https://cdn.eja.cloud/tibula.js";
  o[#o+1]=ejaSprintf([[<!DOCTYPE html>]]);
  o[#o+1]=ejaSprintf([[<html lang="%s">]], tibula.ejaLanguage, tibula.ejaLanguage);
  o[#o+1]=ejaSprintf([[<head>]]);
