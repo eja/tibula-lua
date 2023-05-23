@@ -17,7 +17,7 @@ eja.help.tibulaStart="start tibula [web port] {35248}";
 eja.help.tibulaStop="stop tibula [web port] {35248}";
 eja.help.tibulaInstall="create db/user and install demo version";
 eja.help.tibulaPath="tibula data path";
-eja.help.tibulaScript="javascript full url {https://cdn.eja.cloud/tibula.js}";
+eja.help.tibulaScript="javascript full url {https://cdn.eja.it/tibula.js}";
 eja.help.tibulaCron="cron keep alive interval {0=off}";
 eja.help.tibulaImport="import module {file name}";
 eja.help.tibulaExport="export module {module name}";
