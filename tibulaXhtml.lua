@@ -24,7 +24,7 @@ end
 function tibulaXhtmlHeader() 	--return xhtml header and open form
  local o={};
 
- local script=eja.opt.tibulaScript or "https://cdn.eja.cloud/tibula.js";
+ local script=eja.opt.tibulaScript or "https://cdn.eja.it/tibula.js";
  o[#o+1]=ejaSprintf([[<!DOCTYPE html>]]);
  o[#o+1]=ejaSprintf([[<html lang="%s">]], tibula.ejaLanguage, tibula.ejaLanguage);
  o[#o+1]=ejaSprintf([[<head>]]);
